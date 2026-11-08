@@ -37,6 +37,21 @@ export default function App() {
   const [logsRecentes, setLogsRecentes] = useState({ avl: [], rb: [] });
   const [tabLog, setTabLog] = useState('todos');
 
+  const formatErrorMessage = (detail, fallback = 'Erro na operação') => {
+    if (!detail) return fallback;
+    if (typeof detail === 'string') return detail;
+    if (Array.isArray(detail) && detail.length > 0) {
+      return detail.map(err => {
+        const field = err.loc ? err.loc[err.loc.length - 1] : '';
+        return field ? `Campo '${field}': ${err.msg}` : err.msg;
+      }).join(' | ');
+    }
+    if (typeof detail === 'object') {
+      return JSON.stringify(detail);
+    }
+    return String(detail);
+  };
+
   const notify = (msg, isError = false) => {
     setNotification({ msg, isError });
     setTimeout(() => setNotification(null), 5000);
@@ -78,7 +93,7 @@ export default function App() {
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.detail || 'Erro ao inserir conta');
+      if (!res.ok) throw new Error(formatErrorMessage(json.detail, 'Erro ao inserir conta'));
 
       setData(json.dados);
       if (json.logs) {
@@ -110,7 +125,7 @@ export default function App() {
       });
 
       const json = await res.json();
-      if (!res.ok) throw new Error(json.detail || 'Erro ao remover conta');
+      if (!res.ok) throw new Error(formatErrorMessage(json.detail, 'Erro ao remover conta'));
 
       setData(json.dados);
       if (json.logs) {
@@ -172,7 +187,7 @@ export default function App() {
     try {
       const res = await fetch(`${API_BASE}/api/preset/${nome}`, { method: 'POST' });
       const json = await res.json();
-      if (!res.ok) throw new Error(json.detail || 'Falha ao carregar preset');
+      if (!res.ok) throw new Error(formatErrorMessage(json.detail, 'Falha ao carregar preset'));
 
       setData(json.dados);
       if (json.logs) {
@@ -300,7 +315,7 @@ export default function App() {
               <div className="grid grid-cols-2 gap-2">
                 <input
                   type="number"
-                  placeholder="Número (10001-999999)"
+                  placeholder="Número da conta (ex: 20)"
                   value={numeroConta}
                   onChange={(e) => setNumeroConta(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"
@@ -308,7 +323,7 @@ export default function App() {
                 />
                 <input
                   type="text"
-                  placeholder="Nome do Titular"
+                  placeholder="Nome do Titular (opcional)"
                   value={titular}
                   onChange={(e) => setTitular(e.target.value)}
                   className="w-full px-3 py-2 text-xs rounded-xl bg-slate-950 border border-slate-800 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-cyan-500"

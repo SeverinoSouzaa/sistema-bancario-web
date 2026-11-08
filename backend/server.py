@@ -122,14 +122,14 @@ def obter_estado_completo() -> Dict[str, Any]:
 
 
 class InserirContaRequest(BaseModel):
-    numero_conta: int = Field(..., ge=10001, le=999999, description="Chave única de 5 a 6 dígitos")
-    titular: str = Field(..., min_length=2, max_length=50)
+    numero_conta: int = Field(..., ge=1, le=9999999, description="Número da conta (inteiro positivo)")
+    titular: Optional[str] = Field(default="", max_length=100)
     saldo: float = Field(default=1000.0, ge=0.0)
     tipo: str = Field(default="Corrente")
 
 
 class OperacaoChaveRequest(BaseModel):
-    numero_conta: int = Field(..., ge=10001, le=999999)
+    numero_conta: int = Field(..., ge=1, le=9999999, description="Número da conta (inteiro positivo)")
 
 
 @app.get("/api/estado")
@@ -142,9 +142,10 @@ def rota_obter_estado():
 
 @app.post("/api/inserir")
 def rota_inserir_conta(req: InserirContaRequest):
+    nome_titular = req.titular.strip() if req.titular and req.titular.strip() else f"Conta {req.numero_conta}"
     conta = ContaBancaria(
         numero_conta=req.numero_conta,
-        titular=req.titular,
+        titular=nome_titular,
         agencia="0001",
         tipo=req.tipo,
         saldo=req.saldo
@@ -164,7 +165,7 @@ def rota_inserir_conta(req: InserirContaRequest):
     registro_op = {
         "tipo": "INSERCAO",
         "chave": req.numero_conta,
-        "titular": req.titular,
+        "titular": nome_titular,
         "detalhes": f"Conta {req.numero_conta} cadastrada com sucesso.",
         "logs": novos_logs
     }
