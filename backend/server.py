@@ -11,9 +11,14 @@ SUBMODULE_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "
 if SUBMODULE_PATH not in sys.path:
     sys.path.insert(0, SUBMODULE_PATH)
 
-from modelos import ContaBancaria, Cor
-from avl import ArvoreAVL
-from rubro_negra import ArvoreRubroNegra
+try:
+    from modelos import ContaBancaria, Cor  # type: ignore
+    from avl import ArvoreAVL  # type: ignore
+    from rubro_negra import ArvoreRubroNegra  # type: ignore
+except ImportError:
+    from backend_original.modelos import ContaBancaria, Cor  # type: ignore
+    from backend_original.avl import ArvoreAVL  # type: ignore
+    from backend_original.rubro_negra import ArvoreRubroNegra  # type: ignore
 
 app = FastAPI(
     title="Visualizador de Árvores Balanceadas - Sistema Bancário",
