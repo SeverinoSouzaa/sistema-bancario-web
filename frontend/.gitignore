@@ -8,7 +8,7 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
+# dist compilado liberado para execucao direta via python app.py
 dist-ssr
 *.local
 

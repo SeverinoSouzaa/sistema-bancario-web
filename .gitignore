@@ -7,9 +7,10 @@ venv/
 
 # Node / Vite
 node_modules/
-dist/
 dist-ssr/
 *.local
+# Permite a pasta dist pré-compilada para rodar com 'python app.py' sem precisar de Node.js
+!frontend/dist/**
 
 # IDEs e Sistema
 .vscode/
