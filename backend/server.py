@@ -281,6 +281,223 @@ def simular_passos_completos_rb(rb_store: Any, conta: Any) -> List[Dict[str, Any
     return passos
 
 
+def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str, Any]]:
+    rb: Any = copy.deepcopy(rb_store)
+    nil: Any = rb.NIL
+    cor_v: Any = Cor.VERMELHO
+    cor_p: Any = Cor.PRETO
+
+    z: Any = rb.raiz
+    while z != nil and z.chave != numero_conta:
+        if numero_conta < z.chave:
+            z = z.esquerda
+        else:
+            z = z.direita
+
+    if z == nil:
+        return []
+
+    passos: List[Dict[str, Any]] = []
+    y: Any = z
+    y_cor_original = y.cor
+    z_cor_original = z.cor
+
+    if z.esquerda == nil:
+        x: Any = z.direita
+        rb._transplant(z, z.direita)
+        passos.append({
+            "fase": "desconexao",
+            "arvore": serializar_no_rb(rb.raiz, nil),
+            "no_foco": x.chave if x != nil else None,
+            "titulo": "Desconexão do Nó",
+            "descricao": f"Conta #{numero_conta} desconectada da árvore. Filho direito assumiu a posição.",
+            "status": "warning"
+        })
+    elif z.direita == nil:
+        x = z.esquerda
+        rb._transplant(z, z.esquerda)
+        passos.append({
+            "fase": "desconexao",
+            "arvore": serializar_no_rb(rb.raiz, nil),
+            "no_foco": x.chave if x != nil else None,
+            "titulo": "Desconexão do Nó",
+            "descricao": f"Conta #{numero_conta} desconectada da árvore. Filho esquerdo assumiu a posição.",
+            "status": "warning"
+        })
+    else:
+        # Grau 2: Substituição por Sucessor em-ordem
+        y = rb._menor_no(z.direita)
+        y_cor_original = y.cor
+        x = y.direita
+        sucessor_chave = y.chave
+
+        if y.pai == z:
+            x.pai = y
+        else:
+            rb._transplant(y, y.direita)
+            y.direita = z.direita
+            y.direita.pai = y
+
+        rb._transplant(z, y)
+        y.esquerda = z.esquerda
+        y.esquerda.pai = y
+
+        # 1. Sucessor assume a posição física mantendo a cor original
+        passos.append({
+            "fase": "substituicao_sucessor",
+            "arvore": serializar_no_rb(rb.raiz, nil),
+            "no_foco": sucessor_chave,
+            "titulo": "Substituição pelo Sucessor em-ordem (Cores Mantidas)",
+            "descricao": f"Conta #{numero_conta} possuía 2 filhos (grau 2). O sucessor em-ordem Conta #{sucessor_chave} assume a posição física de #{numero_conta}, mantendo temporariamente sua cor original {y_cor_original.value}.",
+            "status": "warning"
+        })
+
+        # 2. Herança da cor do nó alvo excluído
+        if y.cor.value != z_cor_original.value:
+            y.cor = z_cor_original
+            passos.append({
+                "fase": "recoloracao_heranca",
+                "arvore": serializar_no_rb(rb.raiz, nil),
+                "no_foco": sucessor_chave,
+                "titulo": "Recoloração por Herança da Cor",
+                "descricao": f"O sucessor Conta #{sucessor_chave} é RECOLORIDO de {y_cor_original.value} para {z_cor_original.value}, herdando a cor do nó excluído (#{numero_conta}) para preservar a altura negra da subárvore.",
+                "status": "success"
+            })
+        else:
+            y.cor = z_cor_original
+
+    # Fixup se o nó que desocupou a posição na base era PRETO
+    if y_cor_original.value == "PRETO":
+        while x != rb.raiz and x.cor.value == "PRETO":
+            if x == x.pai.esquerda:
+                w: Any = x.pai.direita
+                if w.cor.value == "VERMELHO":
+                    w.cor = cor_p
+                    x.pai.cor = cor_v
+                    rb._rotacao_esquerda(x.pai)
+                    passos.append({
+                        "fase": "fixup_caso1",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": w.chave if w != nil else None,
+                        "titulo": "Fixup Caso 1: Rotação no Pai & Recoloração do Irmão",
+                        "descricao": f"Irmão #{w.chave if w != nil else 'NIL'} era VERMELHO. Rotação à esquerda no Pai #{x.pai.chave} e inversão de cores para transformar em irmão preto.",
+                        "status": "warning"
+                    })
+                    w = x.pai.direita
+
+                if w.esquerda.cor.value == "PRETO" and w.direita.cor.value == "PRETO":
+                    w.cor = cor_v
+                    passos.append({
+                        "fase": "fixup_caso2",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": w.chave if w != nil else None,
+                        "titulo": "Fixup Caso 2: Recoloração do Irmão (Dupla-Preta Sobe)",
+                        "descricao": f"Irmão #{w.chave if w != nil else 'NIL'} e ambos os filhos são PRETOS. Irmão é recolorido para VERMELHO e a dupla-preta sobe para o Pai #{x.pai.chave}.",
+                        "status": "warning"
+                    })
+                    x = x.pai
+                else:
+                    if w.direita.cor.value == "PRETO":
+                        w.esquerda.cor = cor_p
+                        w.cor = cor_v
+                        rb._rotacao_direita(w)
+                        passos.append({
+                            "fase": "fixup_caso3",
+                            "arvore": serializar_no_rb(rb.raiz, nil),
+                            "no_foco": w.chave if w != nil else None,
+                            "titulo": "Fixup Caso 3: Rotação no Irmão (Zigue-Zague)",
+                            "descricao": f"Filho direito do irmão é PRETO e esquerdo é VERMELHO. Rotação à direita no Irmão #{w.chave} para alinhar no Caso 4.",
+                            "status": "warning"
+                        })
+                        w = x.pai.direita
+
+                    pai_ref: Any = x.pai
+                    pai_cor_orig = pai_ref.cor
+                    rb._rotacao_esquerda(pai_ref)
+                    w.cor = pai_cor_orig
+                    pai_ref.cor = cor_p
+                    w.direita.cor = cor_p
+                    passos.append({
+                        "fase": "fixup_caso4",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": w.chave if w != nil else None,
+                        "titulo": "Fixup Caso 4: Rotação no Pai & Ajuste de Cores",
+                        "descricao": f"Filho direito do irmão é VERMELHO. Rotação à esquerda no Pai #{pai_ref.chave} e absorção da dupla-preta.",
+                        "status": "success"
+                    })
+                    x = rb.raiz
+            else:
+                w = x.pai.esquerda
+                if w.cor.value == "VERMELHO":
+                    w.cor = cor_p
+                    x.pai.cor = cor_v
+                    rb._rotacao_direita(x.pai)
+                    passos.append({
+                        "fase": "fixup_caso1",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": w.chave if w != nil else None,
+                        "titulo": "Fixup Caso 1: Rotação no Pai & Recoloração do Irmão",
+                        "descricao": f"Irmão #{w.chave if w != nil else 'NIL'} era VERMELHO. Rotação à direita no Pai #{x.pai.chave} e inversão de cores.",
+                        "status": "warning"
+                    })
+                    w = x.pai.esquerda
+
+                if w.direita.cor.value == "PRETO" and w.esquerda.cor.value == "PRETO":
+                    w.cor = cor_v
+                    passos.append({
+                        "fase": "fixup_caso2",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": w.chave if w != nil else None,
+                        "titulo": "Fixup Caso 2: Recoloração do Irmão (Dupla-Preta Sobe)",
+                        "descricao": f"Irmão #{w.chave if w != nil else 'NIL'} e ambos os filhos são PRETOS. Irmão é recolorido para VERMELHO e a dupla-preta sobe para o Pai #{x.pai.chave}.",
+                        "status": "warning"
+                    })
+                    x = x.pai
+                else:
+                    if w.esquerda.cor.value == "PRETO":
+                        w.direita.cor = cor_p
+                        w.cor = cor_v
+                        rb._rotacao_esquerda(w)
+                        passos.append({
+                            "fase": "fixup_caso3",
+                            "arvore": serializar_no_rb(rb.raiz, nil),
+                            "no_foco": w.chave if w != nil else None,
+                            "titulo": "Fixup Caso 3: Rotação no Irmão (Zigue-Zague)",
+                            "descricao": f"Filho esquerdo do irmão é PRETO e direito é VERMELHO. Rotação à esquerda no Irmão #{w.chave} para alinhar no Caso 4.",
+                            "status": "warning"
+                        })
+                        w = x.pai.esquerda
+
+                    pai_ref = x.pai
+                    pai_cor_orig = pai_ref.cor
+                    rb._rotacao_direita(pai_ref)
+                    w.cor = pai_cor_orig
+                    pai_ref.cor = cor_p
+                    w.esquerda.cor = cor_p
+                    passos.append({
+                        "fase": "fixup_caso4",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": w.chave if w != nil else None,
+                        "titulo": "Fixup Caso 4: Rotação no Pai & Ajuste de Cores",
+                        "descricao": f"Filho esquerdo do irmão é VERMELHO. Rotação à direita no Pai #{pai_ref.chave} e absorção da dupla-preta.",
+                        "status": "success"
+                    })
+                    x = rb.raiz
+
+        if x.cor.value != "PRETO":
+            x.cor = cor_p
+            passos.append({
+                "fase": "fixup_final_cor",
+                "arvore": serializar_no_rb(rb.raiz, nil),
+                "no_foco": x.chave if x != nil else None,
+                "titulo": "Fixação de Nó Preto",
+                "descricao": "Nó x recolorido para PRETO para absorver a dupla-preta final.",
+                "status": "success"
+            })
+
+    return passos
+
+
 def extrair_diagnostico_rebalanceamento(
     logs_avl: List[str],
     logs_rb: List[str],
@@ -552,57 +769,71 @@ def extrair_diagnostico_rebalanceamento(
         })
         rb_diag["passos"] = passos_rb
 
-    elif "[REMOCAO RUBRO-NEGRA" in texto_rb:
-        m_caso_rem_rb = re.search(r"\[REMOCAO RUBRO-NEGRA - (CASO [^\]]+)\]", texto_rb)
-        caso_desc_rb = m_caso_rem_rb.group(1).strip() if m_caso_rem_rb else "Rebalanceamento pós-remoção"
-        rb_diag["caso"] = caso_desc_rb
-        rb_diag["tipo_acao"] = "Ajuste de altura-negra pós-remoção"
-        rb_diag["passos"] = [
-            {
-                "ordem": 1,
-                "titulo": "1. Estrutura Antes da Remoção",
-                "descricao": f"Árvore Rubro-Negra com a Conta #{chave} cadastrada.",
-                "arvore": snapshots_rb.get("antes") if snapshots_rb else None,
-                "no_foco": chave,
-                "status": "info"
-            },
-            {
-                "ordem": 2,
-                "titulo": "2. Remoção do Nó",
-                "descricao": f"Conta #{chave} removida da árvore: {caso_desc_rb}.",
-                "arvore": snapshots_rb.get("final") if snapshots_rb else None,
-                "no_foco": None,
-                "status": "warning"
-            },
-            {
-                "ordem": 3,
-                "titulo": "3. Árvore Resultante Válida",
-                "descricao": "Invariantes de altura-negra e coloração restabelecidas com sucesso.",
-                "arvore": snapshots_rb.get("final") if snapshots_rb else None,
-                "no_foco": None,
-                "status": "success"
-            }
-        ]
     elif tipo_op == "REMOCAO" and chave > 0:
-        rb_diag["caso"] = "Remoção Direta"
-        rb_diag["passos"] = [
-            {
-                "ordem": 1,
-                "titulo": "1. Estrutura Antes da Remoção",
-                "descricao": f"Árvore Rubro-Negra com a Conta #{chave} cadastrada.",
-                "arvore": snapshots_rb.get("antes") if snapshots_rb else None,
-                "no_foco": chave,
-                "status": "info"
-            },
-            {
+        simulados_rem = snapshots_rb.get("passos_simulados") if snapshots_rb else None
+        tem_heranca = any(s.get("fase") == "recoloracao_heranca" for s in (simulados_rem or []))
+
+        if "[REMOCAO RUBRO-NEGRA" in texto_rb:
+            m_caso_rem_rb = re.search(r"\[REMOCAO RUBRO-NEGRA - (CASO [^\]]+)\]", texto_rb)
+            rb_diag["caso"] = m_caso_rem_rb.group(1).strip() if m_caso_rem_rb else "Rebalanceamento pós-remoção"
+            rb_diag["tipo_acao"] = "Ajuste de altura-negra pós-remoção (Cormen)"
+            rb_diag["houve_rebalanceamento"] = True
+        elif tem_heranca or "[RECOLORACAO NA RUBRO-NEGRA" in texto_rb:
+            rb_diag["caso"] = "Substituição & Recoloração (Grau 2)"
+            rb_diag["tipo_acao"] = "Sucessor em-ordem assume posição e herda cor do nó excluído"
+            rb_diag["houve_rebalanceamento"] = True
+        else:
+            rb_diag["caso"] = "Remoção Direta"
+            rb_diag["tipo_acao"] = "Nenhum ajuste necessário"
+
+        recolores_rem = re.findall(r"(?:Conta\s*)?(\d+)\s*e\s*RECOLORIDA\s*de\s*(?:VERMELHO|PRETO)\s*para\s*(PRETO|VERMELHO)", texto_rb)
+        for k, cor_para in recolores_rem:
+            if not any(r["chave"] == int(k) and r["nova_cor"] == cor_para for r in rb_diag["recoloracoes"]):
+                rb_diag["recoloracoes"].append({
+                    "papel": "Sucessor",
+                    "chave": int(k),
+                    "nova_cor": cor_para
+                })
+
+        passos_rb = []
+        passos_rb.append({
+            "ordem": 1,
+            "titulo": "1. Estrutura Antes da Remoção",
+            "descricao": f"Árvore Rubro-Negra com a Conta #{chave} cadastrada.",
+            "arvore": snapshots_rb.get("antes") if snapshots_rb else None,
+            "no_foco": chave,
+            "status": "info"
+        })
+
+        if simulados_rem:
+            for s in simulados_rem:
+                passos_rb.append({
+                    "ordem": len(passos_rb) + 1,
+                    "titulo": f"{len(passos_rb) + 1}. {s['titulo']}",
+                    "descricao": s["descricao"],
+                    "arvore": s["arvore"],
+                    "no_foco": s["no_foco"],
+                    "status": s["status"]
+                })
+        else:
+            passos_rb.append({
                 "ordem": 2,
                 "titulo": "2. Conta Encerrada",
                 "descricao": f"Conta #{chave} removida. Invariantes de coloração e altura-negra preservadas.",
                 "arvore": snapshots_rb.get("final") if snapshots_rb else None,
                 "no_foco": None,
                 "status": "success"
-            }
-        ]
+            })
+
+        passos_rb.append({
+            "ordem": len(passos_rb) + 1,
+            "titulo": f"{len(passos_rb) + 1}. Árvore Resultante Válida",
+            "descricao": "Estrutura resultante após encerramento da conta. Todas as 5 propriedades de Cormen e alturas-negras preservadas.",
+            "arvore": snapshots_rb.get("final") if snapshots_rb else None,
+            "no_foco": None,
+            "status": "success"
+        })
+        rb_diag["passos"] = passos_rb
     elif tipo_op == "INSERCAO" and chave > 0:
         rb_diag["passos"] = [
             {
@@ -830,6 +1061,8 @@ def rota_remover_conta(req: OperacaoChaveRequest):
     raiz_antes_avl = serializar_no_avl(store.avl.raiz)
     raiz_antes_rb = serializar_no_rb(store.rb.raiz, store.rb.NIL)
 
+    passos_simulados_rb = simular_passos_remocao_rb(store.rb, req.numero_conta)
+
     rem_avl = store.avl.remover(req.numero_conta)
     rem_rb = store.rb.remover(req.numero_conta)
 
@@ -844,6 +1077,7 @@ def rota_remover_conta(req: OperacaoChaveRequest):
     }
     snapshots_rb = {
         "antes": raiz_antes_rb,
+        "passos_simulados": passos_simulados_rb,
         "final": raiz_final_rb
     }
 
