@@ -91,9 +91,29 @@ def serializar_no_rb(no, nil) -> Optional[Dict[str, Any]]:
     }
 
 
+def serializar_conta_resumida(c: Optional[ContaBancaria]) -> Optional[Dict[str, Any]]:
+    if not c:
+        return None
+    return {
+        "numero_conta": c.numero_conta,
+        "titular": c.titular,
+        "saldo": float(c.saldo),
+        "tipo": c.tipo,
+        "agencia": c.agencia
+    }
+
+
 def obter_estado_completo() -> Dict[str, Any]:
     valido_avl, msg_avl = store.avl.validar_propriedades()
     valido_rb, msg_rb = store.rb.validar_propriedades()
+
+    avl_pre = [c.numero_conta for c in store.avl.caminhamento_pre_ordem()]
+    avl_em = [c.numero_conta for c in store.avl.caminhamento_em_ordem()]
+    avl_pos = [c.numero_conta for c in store.avl.caminhamento_pos_ordem()]
+
+    rb_pre = [c.numero_conta for c in store.rb.caminhamento_pre_ordem()]
+    rb_em = [c.numero_conta for c in store.rb.caminhamento_em_ordem()]
+    rb_pos = [c.numero_conta for c in store.rb.caminhamento_pos_ordem()]
 
     return {
         "avl": {
@@ -106,7 +126,14 @@ def obter_estado_completo() -> Dict[str, Any]:
             "rot_dupla_esq_dir": store.avl.estatisticas.rotacoes_duplas_esq_dir,
             "rot_dupla_dir_esq": store.avl.estatisticas.rotacoes_duplas_dir_esq,
             "valido": valido_avl,
-            "mensagem_validacao": msg_avl
+            "mensagem_validacao": msg_avl,
+            "caminhamentos": {
+                "pre": avl_pre,
+                "em": avl_em,
+                "pos": avl_pos
+            },
+            "menor": serializar_conta_resumida(store.avl.obter_menor()),
+            "maior": serializar_conta_resumida(store.avl.obter_maior())
         },
         "rubro_negra": {
             "raiz": serializar_no_rb(store.rb.raiz, store.rb.NIL),
@@ -115,7 +142,14 @@ def obter_estado_completo() -> Dict[str, Any]:
             "rotacoes_total": store.rb.estatisticas.total_rotacoes,
             "recoloracoes": store.rb.estatisticas.recoloracoes,
             "valido": valido_rb,
-            "mensagem_validacao": msg_rb
+            "mensagem_validacao": msg_rb,
+            "caminhamentos": {
+                "pre": rb_pre,
+                "em": rb_em,
+                "pos": rb_pos
+            },
+            "menor": serializar_conta_resumida(store.rb.obter_menor()),
+            "maior": serializar_conta_resumida(store.rb.obter_maior())
         },
         "historico": store.historico_operacoes[-15:]
     }
