@@ -1,6 +1,6 @@
 import sys
 import os
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, cast
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -36,15 +36,21 @@ app.add_middleware(
 
 
 class TreeStore:
+    avl: Any
+    rb: Any
+    historico_operacoes: List[Dict[str, Any]]
+    avl_log_cursor: int
+    rb_log_cursor: int
+
     def __init__(self):
         self.reset()
 
     def reset(self):
         self.avl = ArvoreAVL(modo_detalhado=True)
         self.rb = ArvoreRubroNegra(modo_detalhado=True)
-        self.historico_operacoes: List[Dict[str, Any]] = []
-        self.avl_log_cursor: int = 0
-        self.rb_log_cursor: int = 0
+        self.historico_operacoes = []
+        self.avl_log_cursor = 0
+        self.rb_log_cursor = 0
 
     def capturar_novos_logs(self) -> Dict[str, List[str]]:
         novos_avl = self.avl.estatisticas.logs_detalhados[self.avl_log_cursor:]
@@ -91,7 +97,7 @@ def serializar_no_rb(no, nil) -> Optional[Dict[str, Any]]:
     }
 
 
-def serializar_conta_resumida(c: Optional[ContaBancaria]) -> Optional[Dict[str, Any]]:
+def serializar_conta_resumida(c: Any) -> Optional[Dict[str, Any]]:
     if not c:
         return None
     return {
@@ -177,7 +183,7 @@ def rota_obter_estado():
 @app.post("/api/inserir")
 def rota_inserir_conta(req: InserirContaRequest):
     nome_titular = req.titular.strip() if req.titular and req.titular.strip() else f"Conta {req.numero_conta}"
-    conta = ContaBancaria(
+    conta: Any = ContaBancaria(
         numero_conta=req.numero_conta,
         titular=nome_titular,
         agencia="0001",
@@ -185,8 +191,8 @@ def rota_inserir_conta(req: InserirContaRequest):
         saldo=req.saldo
     )
 
-    sucesso_avl = store.avl.inserir(conta)
-    sucesso_rb = store.rb.inserir(conta)
+    sucesso_avl: bool = bool(store.avl.inserir(cast(Any, conta)))
+    sucesso_rb: bool = bool(store.rb.inserir(cast(Any, conta)))
 
     novos_logs = store.capturar_novos_logs()
 
@@ -321,15 +327,15 @@ def rota_aplicar_preset(nome_preset: str):
 
     itens = presets_definidos[nome_preset]
     for chave, titular, saldo in itens:
-        conta = ContaBancaria(
+        conta: Any = ContaBancaria(
             numero_conta=chave,
             titular=titular,
             agencia="0001",
             tipo="Corrente",
             saldo=saldo
         )
-        store.avl.inserir(conta)
-        store.rb.inserir(conta)
+        store.avl.inserir(cast(Any, conta))
+        store.rb.inserir(cast(Any, conta))
 
     novos_logs = store.capturar_novos_logs()
 
