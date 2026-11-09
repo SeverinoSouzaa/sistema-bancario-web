@@ -82,12 +82,13 @@ def serializar_conta_resumida(c: Any) -> Optional[Dict[str, Any]]:
 
 
 def gerar_arvore_avl_desbalanceada(raiz_original: Any, conta: Any) -> Any:
+    criar_no_avl: Any = NoAVL
     if raiz_original is None:
-        return NoAVL(conta)
+        return criar_no_avl(cast(Any, conta))  # type: ignore
     raiz_copia = copy.deepcopy(raiz_original)
     def _ins(no: Any) -> Any:
         if no is None:
-            return NoAVL(conta)
+            return criar_no_avl(cast(Any, conta))  # type: ignore
         if conta.numero_conta < no.chave:
             no.esquerda = _ins(no.esquerda)
         elif conta.numero_conta > no.chave:
@@ -98,20 +99,24 @@ def gerar_arvore_avl_desbalanceada(raiz_original: Any, conta: Any) -> Any:
 
 
 def gerar_arvore_rb_sem_fixup(rb_store: Any, conta: Any) -> Any:
-    if rb_store.raiz == rb_store.NIL:
-        return NoRB(conta=conta, cor=Cor.VERMELHO, esquerda=rb_store.NIL, direita=rb_store.NIL, pai=rb_store.NIL)
+    criar_no_rb: Any = NoRB
+    cor_v: Any = Cor.VERMELHO
+    nil_store: Any = rb_store.NIL
+    if rb_store.raiz == nil_store:
+        return criar_no_rb(conta=conta, cor=cor_v, esquerda=nil_store, direita=nil_store, pai=nil_store)  # type: ignore
     rb_copia = copy.deepcopy(rb_store)
-    z = NoRB(conta=conta, cor=Cor.VERMELHO, esquerda=rb_copia.NIL, direita=rb_copia.NIL, pai=rb_copia.NIL)
-    y = rb_copia.NIL
-    x = rb_copia.raiz
-    while x != rb_copia.NIL:
+    nil_copia: Any = rb_copia.NIL
+    z: Any = criar_no_rb(conta=conta, cor=cor_v, esquerda=nil_copia, direita=nil_copia, pai=nil_copia)  # type: ignore
+    y: Any = nil_copia
+    x: Any = rb_copia.raiz
+    while x != nil_copia:
         y = x
         if z.chave < x.chave:
             x = x.esquerda
         else:
             x = x.direita
     z.pai = y
-    if y == rb_copia.NIL:
+    if y == nil_copia:
         rb_copia.raiz = z
     elif z.chave < y.chave:
         y.esquerda = z
