@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   ChevronRight,
   ChevronLeft,
@@ -24,16 +24,24 @@ export default function DetailedExecutionInspector({
   // Active step index (defaults to the last step, showing the final tree)
   const [activeStepIndex, setActiveStepIndex] = useState(passos.length > 0 ? passos.length - 1 : 0);
 
-  // When diagnostic changes (new operation), reset to final step
+  // Signature of the operation currently inspected
+  const currentOpSignature = `${op?.tipo || 'NONE'}_${op?.chave || 0}_${op?.timestamp || ''}_${treeType}`;
+  const lastOpSignatureRef = useRef('');
+
+  // Only reset to final step when a NEW operation occurs or treeType changes
+  // Prevents background polling from resetting the user's manual step inspection
   useEffect(() => {
     if (passos.length > 0) {
-      const finalIndex = passos.length - 1;
-      setActiveStepIndex(finalIndex);
-      if (onSelectStep) {
-        onSelectStep(passos[finalIndex]);
+      if (lastOpSignatureRef.current !== currentOpSignature) {
+        lastOpSignatureRef.current = currentOpSignature;
+        const finalIndex = passos.length - 1;
+        setActiveStepIndex(finalIndex);
+        if (onSelectStep) {
+          onSelectStep(passos[finalIndex]);
+        }
       }
     }
-  }, [diagnostic, treeType]);
+  }, [currentOpSignature, passos.length, onSelectStep]);
 
   const handleStepChange = (idx) => {
     if (idx < 0 || idx >= passos.length) return;
