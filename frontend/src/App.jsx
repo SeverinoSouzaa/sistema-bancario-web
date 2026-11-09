@@ -22,6 +22,7 @@ import {
   Maximize2
 } from 'lucide-react';
 import BinaryTreeVisualizer from './components/BinaryTreeVisualizer';
+import DetailedExecutionInspector from './components/DetailedExecutionInspector';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -36,6 +37,7 @@ export default function App() {
 
   // View Mode: 'split' (Lado a Lado), 'avl' (Foco AVL), 'rb' (Foco Rubro-Negra), 'traversals' (Caminhamentos e Extremos)
   const [viewMode, setViewMode] = useState('split');
+  const [modoDetalhado, setModoDetalhado] = useState(true);
 
   // Drawers & Modals
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -496,8 +498,8 @@ export default function App() {
           <div className="flex items-center gap-1">
             {[
               { id: 'split', label: 'Lado a Lado' },
-              { id: 'avl', label: 'Foco AVL' },
-              { id: 'rb', label: 'Foco Rubro-Negra' },
+              { id: 'avl', label: 'Foco AVL (Passo a Passo)' },
+              { id: 'rb', label: 'Foco Rubro-Negra (Passo a Passo)' },
               { id: 'traversals', label: 'Caminhamentos & Extremos' }
             ].map((tab) => (
               <button
@@ -516,6 +518,21 @@ export default function App() {
 
           {/* Right Header Status & Actions */}
           <div className="flex items-center gap-3">
+            {/* Modo Detalhado Toggle (Opção 1 do terminal / Edital Seção 2.4) */}
+            <button
+              type="button"
+              onClick={() => setModoDetalhado(!modoDetalhado)}
+              className={`text-xs px-2.5 py-1.5 rounded-md border flex items-center gap-1.5 transition-colors font-medium ${
+                modoDetalhado
+                  ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
+                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
+              }`}
+              title="Alternar Modo Detalhado (Explicativo Passo a Passo) [ON/OFF] - Conforme Opção 1 do main.py e Seção 2.4 do Edital"
+            >
+              <Sliders className="w-3.5 h-3.5" />
+              <span>Modo Detalhado {modoDetalhado ? 'ON' : 'OFF'}</span>
+            </button>
+
             {/* Backend Status Pill */}
             <div
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
@@ -737,14 +754,49 @@ export default function App() {
           ) : (
             /* ================= VIEW: CANVAS DE VISUALIZAÇÃO GRÁFICA ================= */
             <div className="flex-1 flex flex-col p-4 overflow-hidden relative">
+              {/* Quick Rebalance Alert Banner in Split View (Heurística #1) */}
+              {viewMode === 'split' && modoDetalhado && (data?.ultimo_diagnostico?.avl?.houve_rebalanceamento || data?.ultimo_diagnostico?.rubro_negra?.houve_rebalanceamento) && (
+                <div className="mb-3 px-3.5 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-between text-xs text-indigo-950 shrink-0 shadow-2xs">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
+                    <span className="font-medium">
+                      <b>Rebalanceamento executado:</b>{' '}
+                      {data.ultimo_diagnostico.avl.houve_rebalanceamento ? `[AVL: ${data.ultimo_diagnostico.avl.caso}]` : ''}
+                      {data.ultimo_diagnostico.avl.houve_rebalanceamento && data.ultimo_diagnostico.rubro_negra.houve_rebalanceamento ? ' ' : ''}
+                      {data.ultimo_diagnostico.rubro_negra.houve_rebalanceamento ? `[RN: ${data.ultimo_diagnostico.rubro_negra.caso}]` : ''}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {data.ultimo_diagnostico.avl.houve_rebalanceamento && (
+                      <button
+                        onClick={() => setViewMode('avl')}
+                        className="px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-indigo-800 text-[11px] font-semibold hover:bg-indigo-50 transition-colors shadow-2xs"
+                      >
+                        Inspecionar AVL ➜
+                      </button>
+                    )}
+                    {data.ultimo_diagnostico.rubro_negra.houve_rebalanceamento && (
+                      <button
+                        onClick={() => setViewMode('rb')}
+                        className="px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-indigo-800 text-[11px] font-semibold hover:bg-indigo-50 transition-colors shadow-2xs"
+                      >
+                        Inspecionar Rubro-Negra ➜
+                      </button>
+                    )}
+                  </div>
+                </div>
+              )}
+
               {/* Quick Metrics Bar on top of Canvas */}
-              <div className="grid grid-cols-2 gap-4 mb-3 shrink-0">
+              <div className={`grid gap-4 mb-3 shrink-0 ${viewMode === 'split' ? 'grid-cols-2' : 'grid-cols-1'}`}>
                 {/* AVL Header Card */}
                 {(viewMode === 'split' || viewMode === 'avl') && (
                   <div className="bg-white rounded-lg border border-slate-200 px-3.5 py-2 flex items-center justify-between shadow-2xs">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full border border-slate-900 bg-white" />
-                      <span className="text-xs font-semibold text-slate-800">Árvore AVL</span>
+                      <span className="text-xs font-semibold text-slate-800">
+                        Árvore AVL {viewMode === 'avl' ? '· Laboratório de Rebalanceamento Passo a Passo' : ''}
+                      </span>
                       <span className="text-[10px] text-slate-400 font-mono">|FB| ≤ 1</span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
@@ -760,7 +812,9 @@ export default function App() {
                   <div className="bg-white rounded-lg border border-slate-200 px-3.5 py-2 flex items-center justify-between shadow-2xs">
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-900" />
-                      <span className="text-xs font-semibold text-slate-800">Árvore Rubro-Negra</span>
+                      <span className="text-xs font-semibold text-slate-800">
+                        Árvore Rubro-Negra {viewMode === 'rb' ? '· Laboratório de Casos do Cormen' : ''}
+                      </span>
                       <span className="text-[10px] text-slate-400 font-mono">Cormen Cap. 13</span>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-slate-600 font-medium">
@@ -773,9 +827,9 @@ export default function App() {
                 )}
               </div>
 
-              {/* Canvases */}
-              <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden relative">
-                {(viewMode === 'split' || viewMode === 'avl') && (
+              {/* Viewports: Split vs Focus with Step-by-Step Inspector */}
+              {viewMode === 'split' && (
+                <div className="flex-1 grid grid-cols-1 md:grid-cols-2 gap-4 overflow-hidden relative">
                   <div className="h-full flex flex-col min-h-0">
                     <BinaryTreeVisualizer
                       root={data?.avl?.raiz}
@@ -784,9 +838,6 @@ export default function App() {
                       onSelectNode={(node) => setSelectedNode({ ...node, treeType: 'AVL' })}
                     />
                   </div>
-                )}
-
-                {(viewMode === 'split' || viewMode === 'rb') && (
                   <div className="h-full flex flex-col min-h-0">
                     <BinaryTreeVisualizer
                       root={data?.rubro_negra?.raiz}
@@ -796,8 +847,49 @@ export default function App() {
                       onSelectNode={(node) => setSelectedNode({ ...node, treeType: 'Rubro-Negra' })}
                     />
                   </div>
-                )}
-              </div>
+                </div>
+              )}
+
+              {viewMode === 'avl' && (
+                <div className="flex-1 flex gap-4 overflow-hidden relative">
+                  <div className="flex-1 h-full min-h-0">
+                    <BinaryTreeVisualizer
+                      root={data?.avl?.raiz}
+                      type="avl"
+                      highlightKey={highlightKey}
+                      onSelectNode={(node) => setSelectedNode({ ...node, treeType: 'AVL' })}
+                    />
+                  </div>
+                  {modoDetalhado && (
+                    <DetailedExecutionInspector
+                      diagnostic={data?.ultimo_diagnostico}
+                      treeType="avl"
+                      onHighlightKey={setHighlightKey}
+                    />
+                  )}
+                </div>
+              )}
+
+              {viewMode === 'rb' && (
+                <div className="flex-1 flex gap-4 overflow-hidden relative">
+                  <div className="flex-1 h-full min-h-0">
+                    <BinaryTreeVisualizer
+                      root={data?.rubro_negra?.raiz}
+                      type="rb"
+                      showNil={showNil}
+                      highlightKey={highlightKey}
+                      onSelectNode={(node) => setSelectedNode({ ...node, treeType: 'Rubro-Negra' })}
+                    />
+                  </div>
+                  {modoDetalhado && (
+                    <DetailedExecutionInspector
+                      diagnostic={data?.ultimo_diagnostico}
+                      treeType="rb"
+                      onHighlightKey={setHighlightKey}
+                    />
+                  )}
+                </div>
+              )}
 
               {/* Floating Bottom Legend (Twinize style: clean horizontal pill) */}
               <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 bg-white/95 backdrop-blur-xs border border-slate-200 rounded-full px-4 py-1.5 shadow-sm flex items-center gap-4 text-xs font-medium text-slate-600">

@@ -1,5 +1,7 @@
 import sys
 import os
+import re
+import time
 from typing import Optional, List, Dict, Any, cast
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException
@@ -35,12 +37,229 @@ app.add_middleware(
 )
 
 
+def extrair_diagnostico_rebalanceamento(
+    logs_avl: List[str],
+    logs_rb: List[str],
+    tipo_op: str,
+    chave: int
+) -> Dict[str, Any]:
+    # --- Diagnóstico AVL ---
+    avl_diag: Dict[str, Any] = {
+        "houve_rebalanceamento": False,
+        "caso": "Árvore Equilibrada",
+        "tipo_rotacao": "Nenhuma rotação necessária",
+        "no_desbalanceado": None,
+        "fb_detectado": None,
+        "filho": None,
+        "no_promovido": None,
+        "subarvore_antes": "",
+        "subarvore_depois": "",
+        "passos": [],
+        "logs": logs_avl
+    }
+
+    texto_avl = "\n\n".join(logs_avl)
+    if "[REBALANCEAMENTO AVL" in texto_avl:
+        avl_diag["houve_rebalanceamento"] = True
+
+        m_caso = re.search(r"\[REBALANCEAMENTO AVL - (CASO [^\]]+)\]", texto_avl)
+        if m_caso:
+            avl_diag["caso"] = m_caso.group(1).strip()
+
+        m_no = re.search(r"Desbalanceamento detectado no No \((\d+)\) com FB=([+-]?\d+)", texto_avl)
+        if m_no:
+            avl_diag["no_desbalanceado"] = int(m_no.group(1))
+            avl_diag["fb_detectado"] = m_no.group(2)
+
+        m_rot = re.search(r"Tipo de Rotacao:\s*([^\n]+)", texto_avl)
+        if m_rot:
+            avl_diag["tipo_rotacao"] = m_rot.group(1).strip()
+
+        m_prom = re.search(r"Nova raiz local promovida:\s*No \((\d+)\)", texto_avl)
+        if m_prom:
+            avl_diag["no_promovido"] = int(m_prom.group(1))
+
+        m_antes = re.search(r">>> Subarvore ANTES[^\n]*:\n(.*?)(?=\n\s*>>>|\Z)", texto_avl, re.DOTALL)
+        if m_antes:
+            avl_diag["subarvore_antes"] = m_antes.group(1).strip()
+
+        m_depois = re.search(r">>> Subarvore DEPOIS[^\n]*:\n(.*?)(?=\n\s*>>>|\Z)", texto_avl, re.DOTALL)
+        if m_depois:
+            avl_diag["subarvore_depois"] = m_depois.group(1).strip()
+
+        passos_avl: List[Dict[str, Any]] = []
+        if tipo_op == "INSERCAO":
+            passos_avl.append({
+                "ordem": 1,
+                "titulo": "Inserção Inicial",
+                "descricao": f"Conta #{chave} inserida na árvore como nó folha.",
+                "tipo": "info"
+            })
+        elif tipo_op == "REMOCAO":
+            passos_avl.append({
+                "ordem": 1,
+                "titulo": "Remoção de Registro",
+                "descricao": f"Conta #{chave} removida da árvore.",
+                "tipo": "info"
+            })
+
+        if avl_diag["no_desbalanceado"]:
+            passos_avl.append({
+                "ordem": 2,
+                "titulo": "Detecção de Desequilíbrio",
+                "descricao": f"Nó ({avl_diag['no_desbalanceado']}) violou o critério AVL com FB={avl_diag['fb_detectado']} (|FB| ≥ 2).",
+                "tipo": "warning"
+            })
+
+        passos_avl.append({
+            "ordem": 3,
+            "titulo": "Rebalanceamento",
+            "descricao": f"{avl_diag['tipo_rotacao']}. " + (f"Nó ({avl_diag['no_promovido']}) promovido a raiz local." if avl_diag['no_promovido'] else ""),
+            "tipo": "success"
+        })
+        passos_avl.append({
+            "ordem": 4,
+            "titulo": "Equilíbrio Restaurado",
+            "descricao": "Alturas e Fatores de Balanceamento recalculados (|FB| ≤ 1 para todos os nós).",
+            "tipo": "success"
+        })
+        avl_diag["passos"] = passos_avl
+    elif "[REMOCAO AVL" in texto_avl:
+        m_caso_rem = re.search(r"\[REMOCAO AVL - (CASO \d+:[^\]]+)\]", texto_avl)
+        if m_caso_rem:
+            avl_diag["caso"] = m_caso_rem.group(1).strip()
+            avl_diag["tipo_rotacao"] = "Remoção direta sem rotação"
+            avl_diag["passos"] = [
+                {"ordem": 1, "titulo": "Encerramento", "descricao": f"Conta #{chave} identificada para exclusão.", "tipo": "info"},
+                {"ordem": 2, "titulo": "Ajuste de Ponteiros", "descricao": avl_diag["caso"], "tipo": "success"},
+                {"ordem": 3, "titulo": "Equilíbrio", "descricao": "Propriedade AVL mantida sem necessidade de rotação.", "tipo": "success"}
+            ]
+    elif tipo_op == "INSERCAO" and chave > 0:
+        avl_diag["passos"] = [
+            {"ordem": 1, "titulo": "Inserção Direta", "descricao": f"Conta #{chave} inserida sem violar a condição AVL (|FB| ≤ 1).", "tipo": "success"}
+        ]
+
+    # --- Diagnóstico Rubro-Negra ---
+    rb_diag: Dict[str, Any] = {
+        "houve_rebalanceamento": False,
+        "caso": "Propriedades Preservadas",
+        "tipo_acao": "Nenhum ajuste necessário",
+        "no_conflito": None,
+        "pai": None,
+        "tio": None,
+        "cor_tio": None,
+        "recoloracoes": [],
+        "subarvore_antes": "",
+        "subarvore_depois": "",
+        "passos": [],
+        "logs": logs_rb
+    }
+
+    texto_rb = "\n\n".join(logs_rb)
+    if "[REBALANCEAMENTO RUBRO-NEGRA" in texto_rb:
+        rb_diag["houve_rebalanceamento"] = True
+
+        m_caso_rb = re.search(r"\[REBALANCEAMENTO RUBRO-NEGRA - (CASO [^\]]+)\]", texto_rb)
+        if m_caso_rb:
+            rb_diag["caso"] = m_caso_rb.group(1).strip()
+
+        m_conflito = re.search(r"Conflito[^:]*: No \((\d+)\) e Pai \((\d+)\)", texto_rb)
+        if m_conflito:
+            rb_diag["no_conflito"] = int(m_conflito.group(1))
+            rb_diag["pai"] = int(m_conflito.group(2))
+
+        m_tio = re.search(r"Tio \((\d+)\) e (VERMELHO|PRETO)", texto_rb)
+        if m_tio:
+            rb_diag["tio"] = int(m_tio.group(1))
+            rb_diag["cor_tio"] = m_tio.group(2)
+
+        recolores = re.findall(r"-\s*(Pai|Tio|Avo)\s*\((\d+)\)\s*passa a ser\s*(PRETO|VERMELHO)", texto_rb)
+        for papel, k, nova_cor in recolores:
+            rb_diag["recoloracoes"].append({
+                "papel": papel,
+                "chave": int(k),
+                "nova_cor": nova_cor
+            })
+
+        if "CASO 1" in rb_diag["caso"]:
+            rb_diag["tipo_acao"] = "Recoloração pura (sem rotação de ponteiros)"
+        elif "CASO 2" in rb_diag["caso"]:
+            rb_diag["tipo_acao"] = "Rotação Simples preparatória (Zigue-Zague)"
+        elif "CASO 3" in rb_diag["caso"]:
+            rb_diag["tipo_acao"] = "Rotação Simples + Recoloração (Linha Reta)"
+
+        m_antes_rb = re.search(r">>> [^\n]*ANTES[^\n]*:\n(.*?)(?=\n\s*>>>|\Z)", texto_rb, re.DOTALL)
+        if m_antes_rb:
+            rb_diag["subarvore_antes"] = m_antes_rb.group(1).strip()
+
+        m_depois_rb = re.search(r">>> [^\n]*(?:DEPOIS|Passo 2)[^\n]*:\n(.*?)(?=\n\s*>>>|\Z)", texto_rb, re.DOTALL)
+        if m_depois_rb:
+            rb_diag["subarvore_depois"] = m_depois_rb.group(1).strip()
+
+        passos_rb: List[Dict[str, Any]] = []
+        if tipo_op == "INSERCAO":
+            passos_rb.append({
+                "ordem": 1,
+                "titulo": "Inserção Rubra",
+                "descricao": f"Conta #{chave} inserida como nó VERMELHO (preservando altura-negra).",
+                "tipo": "info"
+            })
+            if rb_diag["no_conflito"] and rb_diag["pai"]:
+                passos_rb.append({
+                    "ordem": 2,
+                    "titulo": "Conflito Rubro-Rubro",
+                    "descricao": f"Violação da Regra 4: Nó ({rb_diag['no_conflito']}) e Pai ({rb_diag['pai']}) ambos são nós vermelhos.",
+                    "tipo": "warning"
+                })
+
+        if rb_diag["recoloracoes"]:
+            detalhe_rec = ", ".join([f"{r['papel']} #{r['chave']} ➜ {r['nova_cor']}" for r in rb_diag["recoloracoes"]])
+            passos_rb.append({
+                "ordem": 3,
+                "titulo": "Recoloração Efetuada",
+                "descricao": f"Ajuste cromático: {detalhe_rec}.",
+                "tipo": "success"
+            })
+
+        passos_rb.append({
+            "ordem": len(passos_rb) + 1,
+            "titulo": "Propriedades Restauradas",
+            "descricao": "Raiz preta confirmada e invariantes de Cormen Cap. 13 restabelecidas.",
+            "tipo": "success"
+        })
+        rb_diag["passos"] = passos_rb
+    elif "[REMOCAO RUBRO-NEGRA" in texto_rb:
+        m_caso_rem_rb = re.search(r"\[REMOCAO RUBRO-NEGRA - (CASO [^\]]+)\]", texto_rb)
+        if m_caso_rem_rb:
+            rb_diag["caso"] = m_caso_rem_rb.group(1).strip()
+            rb_diag["tipo_acao"] = "Rebalanceamento pós-remoção (Cormen)"
+            rb_diag["passos"] = [
+                {"ordem": 1, "titulo": "Remoção", "descricao": f"Conta #{chave} removida da árvore.", "tipo": "info"},
+                {"ordem": 2, "titulo": "Correção de Altura-Negra", "descricao": rb_diag["caso"], "tipo": "success"}
+            ]
+    elif tipo_op == "INSERCAO" and chave > 0:
+        rb_diag["passos"] = [
+            {"ordem": 1, "titulo": "Inserção Direta", "descricao": f"Conta #{chave} inserida sem conflito de cores (Propriedades do Cormen mantidas).", "tipo": "success"}
+        ]
+
+    return {
+        "operacao": {
+            "tipo": tipo_op,
+            "chave": chave,
+            "timestamp": time.strftime("%H:%M:%S")
+        },
+        "avl": avl_diag,
+        "rubro_negra": rb_diag
+    }
+
+
 class TreeStore:
     avl: Any
     rb: Any
     historico_operacoes: List[Dict[str, Any]]
     avl_log_cursor: int
     rb_log_cursor: int
+    ultimo_diagnostico: Dict[str, Any]
 
     def __init__(self):
         self.reset()
@@ -51,6 +270,7 @@ class TreeStore:
         self.historico_operacoes = []
         self.avl_log_cursor = 0
         self.rb_log_cursor = 0
+        self.ultimo_diagnostico = extrair_diagnostico_rebalanceamento([], [], "INICIAL", 0)
 
     def capturar_novos_logs(self) -> Dict[str, List[str]]:
         novos_avl = self.avl.estatisticas.logs_detalhados[self.avl_log_cursor:]
@@ -157,7 +377,8 @@ def obter_estado_completo() -> Dict[str, Any]:
             "menor": serializar_conta_resumida(store.rb.obter_menor()),
             "maior": serializar_conta_resumida(store.rb.obter_maior())
         },
-        "historico": store.historico_operacoes[-15:]
+        "historico": store.historico_operacoes[-15:],
+        "ultimo_diagnostico": store.ultimo_diagnostico
     }
 
 
@@ -195,6 +416,8 @@ def rota_inserir_conta(req: InserirContaRequest):
     sucesso_rb: bool = bool(store.rb.inserir(cast(Any, conta)))
 
     novos_logs = store.capturar_novos_logs()
+    diag = extrair_diagnostico_rebalanceamento(novos_logs["avl"], novos_logs["rb"], "INSERCAO", req.numero_conta)
+    store.ultimo_diagnostico = diag
 
     if not sucesso_avl and not sucesso_rb:
         raise HTTPException(
@@ -207,7 +430,8 @@ def rota_inserir_conta(req: InserirContaRequest):
         "chave": req.numero_conta,
         "titular": nome_titular,
         "detalhes": f"Conta {req.numero_conta} cadastrada com sucesso.",
-        "logs": novos_logs
+        "logs": novos_logs,
+        "diagnostico": diag
     }
     store.historico_operacoes.append(registro_op)
 
@@ -215,6 +439,7 @@ def rota_inserir_conta(req: InserirContaRequest):
         "sucesso": True,
         "mensagem": f"Conta {req.numero_conta} inserida com sucesso em ambas as árvores.",
         "logs": novos_logs,
+        "diagnostico": diag,
         "dados": obter_estado_completo()
     }
 
@@ -225,6 +450,8 @@ def rota_remover_conta(req: OperacaoChaveRequest):
     rem_rb = store.rb.remover(req.numero_conta)
 
     novos_logs = store.capturar_novos_logs()
+    diag = extrair_diagnostico_rebalanceamento(novos_logs["avl"], novos_logs["rb"], "REMOCAO", req.numero_conta)
+    store.ultimo_diagnostico = diag
 
     if rem_avl is None and rem_rb is None:
         raise HTTPException(
@@ -238,7 +465,8 @@ def rota_remover_conta(req: OperacaoChaveRequest):
         "chave": req.numero_conta,
         "titular": titular,
         "detalhes": f"Conta {req.numero_conta} removida com sucesso.",
-        "logs": novos_logs
+        "logs": novos_logs,
+        "diagnostico": diag
     }
     store.historico_operacoes.append(registro_op)
 
@@ -246,6 +474,7 @@ def rota_remover_conta(req: OperacaoChaveRequest):
         "sucesso": True,
         "mensagem": f"Conta {req.numero_conta} ({titular}) encerrada com sucesso.",
         "logs": novos_logs,
+        "diagnostico": diag,
         "dados": obter_estado_completo()
     }
 
@@ -338,19 +567,23 @@ def rota_aplicar_preset(nome_preset: str):
         store.rb.inserir(cast(Any, conta))
 
     novos_logs = store.capturar_novos_logs()
+    diag = extrair_diagnostico_rebalanceamento(novos_logs["avl"], novos_logs["rb"], "PRESET", 0)
+    store.ultimo_diagnostico = diag
 
     store.historico_operacoes.append({
         "tipo": "PRESET",
         "chave": nome_preset,
         "titular": f"Cenário Demonstrativo: {nome_preset}",
         "detalhes": f"Carregadas {len(itens)} contas estrategicamente.",
-        "logs": novos_logs
+        "logs": novos_logs,
+        "diagnostico": diag
     })
 
     return {
         "sucesso": True,
         "mensagem": f"Cenário demonstrativo '{nome_preset}' carregado com sucesso.",
         "logs": novos_logs,
+        "diagnostico": diag,
         "dados": obter_estado_completo()
     }
 
