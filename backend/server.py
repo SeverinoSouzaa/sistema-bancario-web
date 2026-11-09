@@ -99,30 +99,186 @@ def gerar_arvore_avl_desbalanceada(raiz_original: Any, conta: Any) -> Any:
 
 
 def gerar_arvore_rb_sem_fixup(rb_store: Any, conta: Any) -> Any:
+    passos = simular_passos_completos_rb(rb_store, conta)
+    if passos and passos[0].get("arvore"):
+        return passos[0]["arvore"]
+    return None
+
+
+def simular_passos_completos_rb(rb_store: Any, conta: Any) -> List[Dict[str, Any]]:
     criar_no_rb: Any = NoRB
     cor_v: Any = Cor.VERMELHO
+    cor_p: Any = Cor.PRETO
+
     nil_store: Any = rb_store.NIL
     if rb_store.raiz == nil_store:
-        return criar_no_rb(conta=conta, cor=cor_v, esquerda=nil_store, direita=nil_store, pai=nil_store)  # type: ignore
-    rb_copia = copy.deepcopy(rb_store)
-    nil_copia: Any = rb_copia.NIL
-    z: Any = criar_no_rb(conta=conta, cor=cor_v, esquerda=nil_copia, direita=nil_copia, pai=nil_copia)  # type: ignore
-    y: Any = nil_copia
+        no_temp: Any = criar_no_rb(conta=conta, cor=cor_p, esquerda=nil_store, direita=nil_store, pai=nil_store)  # type: ignore
+        return [{
+            "fase": "final",
+            "arvore": serializar_no_rb(no_temp, nil_store),
+            "no_foco": conta.numero_conta,
+            "titulo": "Árvore Resultante Válida",
+            "descricao": f"Conta #{conta.numero_conta} inserida como raiz da árvore e colorida como PRETA (Propriedade 2 de Cormen).",
+            "status": "success"
+        }]
+
+    rb_copia: Any = copy.deepcopy(rb_store)
+    nil: Any = rb_copia.NIL
+
+    # 1. Inserção BST tradicional como nó vermelho
+    z: Any = criar_no_rb(conta=conta, cor=cor_v, esquerda=nil, direita=nil, pai=nil)  # type: ignore
+    y: Any = nil
     x: Any = rb_copia.raiz
-    while x != nil_copia:
+    while x != nil:
         y = x
         if z.chave < x.chave:
             x = x.esquerda
         else:
             x = x.direita
     z.pai = y
-    if y == nil_copia:
+    if y == nil:
         rb_copia.raiz = z
     elif z.chave < y.chave:
         y.esquerda = z
     else:
         y.direita = z
-    return rb_copia.raiz
+
+    passos: List[Dict[str, Any]] = []
+
+    # Passo: Inserção Rubra & Violação (antes de qualquer rebalanceamento)
+    pai_chave = z.pai.chave if z.pai and z.pai != nil else None
+    passos.append({
+        "fase": "insercao",
+        "arvore": serializar_no_rb(rb_copia.raiz, nil),
+        "no_foco": z.chave,
+        "titulo": "Inserção Rubra & Violação",
+        "descricao": f"Conta #{conta.numero_conta} inserida como nó VERMELHO. Ocorre conflito entre o nó #{z.chave} e seu pai #{pai_chave} (ambos vermelhos), violando a Regra 4 de Cormen.",
+        "status": "warning"
+    })
+
+    # Simulação do fixup passo a passo registrando rotações puras e recolorações
+    while z.pai.cor.value == "VERMELHO":
+        if z.pai == z.pai.pai.esquerda:
+            u: Any = z.pai.pai.direita
+            if u.cor.value == "VERMELHO":
+                # Caso 1: Tio Vermelho -> Apenas recoloração pura
+                p_k, t_k, a_k = z.pai.chave, u.chave, z.pai.pai.chave
+                z.pai.cor = cor_p
+                u.cor = cor_p
+                z.pai.pai.cor = cor_v
+                passos.append({
+                    "fase": "recoloracao",
+                    "arvore": serializar_no_rb(rb_copia.raiz, nil),
+                    "no_foco": a_k,
+                    "titulo": "Recoloração (Caso 1: Tio Vermelho)",
+                    "descricao": f"Tio #{t_k} é VERMELHO. Solução por recoloração: Pai #{p_k} passa a ser PRETO, Tio #{t_k} passa a ser PRETO e Avô #{a_k} passa a ser VERMELHO.",
+                    "status": "warning"
+                })
+                z = z.pai.pai
+            else:
+                if z == z.pai.direita:
+                    # Caso 2: LR -> Rotação simples no pai para alinhar
+                    p_lr_k = z.pai.chave
+                    z = z.pai
+                    rb_copia._rotacao_esquerda(z)
+                    passos.append({
+                        "fase": "rotacao_pai",
+                        "arvore": serializar_no_rb(rb_copia.raiz, nil),
+                        "no_foco": z.chave,
+                        "titulo": "Rotação no Pai (Alinhamento em Linha Reta)",
+                        "descricao": f"Caso 2 (Zigue-Zague LR): Rotação simples à esquerda no Pai #{p_lr_k} para transformar no Caso 3 (Linha Reta). Observação: as cores dos nós são mantidas intactas.",
+                        "status": "warning"
+                    })
+                # Caso 3: LL -> Rotação no avô (cores mantidas temporariamente!)
+                avo: Any = z.pai.pai
+                pai: Any = z.pai
+                rb_copia._rotacao_direita(avo)
+                passos.append({
+                    "fase": "rotacao_avo",
+                    "arvore": serializar_no_rb(rb_copia.raiz, nil),
+                    "no_foco": pai.chave,
+                    "titulo": "Rotação Estrutural no Avô (Cores Mantidas)",
+                    "descricao": f"Caso 3 (Linha Reta LL): Rotação simples à direita no Avô #{avo.chave}. O nó #{pai.chave} sobe para a raiz local. Observação didática: os nós mantêm suas cores originais antes do ajuste cromático.",
+                    "status": "warning"
+                })
+                # Agora sim: Ajuste de cores de Cormen
+                pai.cor = cor_p
+                avo.cor = cor_v
+                passos.append({
+                    "fase": "recoloracao",
+                    "arvore": serializar_no_rb(rb_copia.raiz, nil),
+                    "no_foco": pai.chave,
+                    "titulo": "Ajuste de Cores / Recoloração",
+                    "descricao": f"Ajuste cromático de Cormen: Pai local #{pai.chave} passa a ser PRETO e antigo Avô #{avo.chave} passa a ser VERMELHO.",
+                    "status": "success"
+                })
+        else:
+            u = z.pai.pai.esquerda
+            if u.cor.value == "VERMELHO":
+                # Caso 1: Tio Vermelho
+                p_k, t_k, a_k = z.pai.chave, u.chave, z.pai.pai.chave
+                z.pai.cor = cor_p
+                u.cor = cor_p
+                z.pai.pai.cor = cor_v
+                passos.append({
+                    "fase": "recoloracao",
+                    "arvore": serializar_no_rb(rb_copia.raiz, nil),
+                    "no_foco": a_k,
+                    "titulo": "Recoloração (Caso 1: Tio Vermelho)",
+                    "descricao": f"Tio #{t_k} é VERMELHO. Solução por recoloração: Pai #{p_k} passa a ser PRETO, Tio #{t_k} passa a ser PRETO e Avô #{a_k} passa a ser VERMELHO.",
+                    "status": "warning"
+                })
+                z = z.pai.pai
+            else:
+                if z == z.pai.esquerda:
+                    # Caso 2: RL -> Rotação simples no pai
+                    p_rl_k = z.pai.chave
+                    z = z.pai
+                    rb_copia._rotacao_direita(z)
+                    passos.append({
+                        "fase": "rotacao_pai",
+                        "arvore": serializar_no_rb(rb_copia.raiz, nil),
+                        "no_foco": z.chave,
+                        "titulo": "Rotação no Pai (Alinhamento em Linha Reta)",
+                        "descricao": f"Caso 2 (Zigue-Zague RL): Rotação simples à direita no Pai #{p_rl_k} para transformar no Caso 3 (Linha Reta). Observação: as cores dos nós são mantidas intactas.",
+                        "status": "warning"
+                    })
+                # Caso 3: RR -> Rotação no avô (cores mantidas temporariamente!)
+                avo = z.pai.pai
+                pai = z.pai
+                rb_copia._rotacao_esquerda(avo)
+                passos.append({
+                    "fase": "rotacao_avo",
+                    "arvore": serializar_no_rb(rb_copia.raiz, nil),
+                    "no_foco": pai.chave,
+                    "titulo": "Rotação Estrutural no Avô (Cores Mantidas)",
+                    "descricao": f"Caso 3 (Linha Reta RR): Rotação simples à esquerda no Avô #{avo.chave}. O nó #{pai.chave} sobe para a raiz local. Observação didática: os nós mantêm suas cores originais antes do ajuste cromático.",
+                    "status": "warning"
+                })
+                # Agora sim: Ajuste de cores de Cormen
+                pai.cor = cor_p
+                avo.cor = cor_v
+                passos.append({
+                    "fase": "recoloracao",
+                    "arvore": serializar_no_rb(rb_copia.raiz, nil),
+                    "no_foco": pai.chave,
+                    "titulo": "Ajuste de Cores / Recoloração",
+                    "descricao": f"Ajuste cromático de Cormen: Pai local #{pai.chave} passa a ser PRETO e antigo Avô #{avo.chave} passa a ser VERMELHO.",
+                    "status": "success"
+                })
+
+    if rb_copia.raiz.cor.value != "PRETO":
+        rb_copia.raiz.cor = cor_p
+        passos.append({
+            "fase": "raiz_preta",
+            "arvore": serializar_no_rb(rb_copia.raiz, nil),
+            "no_foco": rb_copia.raiz.chave,
+            "titulo": "Fixação da Raiz como Preta",
+            "descricao": "Propriedade 2 de Cormen: a raiz da árvore Rubro-Negra deve ser estritamente PRETA.",
+            "status": "success"
+        })
+
+    return passos
 
 
 def extrair_diagnostico_rebalanceamento(
@@ -312,23 +468,29 @@ def extrair_diagnostico_rebalanceamento(
         if m_caso_rb:
             rb_diag["caso"] = m_caso_rb.group(1).strip()
 
-        m_conflito = re.search(r"Conflito[^:]*: No \((\d+)\) e Pai \((\d+)\)", texto_rb)
+        m_conflito = re.search(r"Conflito[^\n]*?No \((\d+)\)[^\n]*?(?:e|com) Pai \((\d+)\)", texto_rb)
         if m_conflito:
             rb_diag["no_conflito"] = int(m_conflito.group(1))
             rb_diag["pai"] = int(m_conflito.group(2))
+        else:
+            m_alt = re.search(r"No \((\d+)\)[^\n]*?Pai \((\d+)\)", texto_rb)
+            if m_alt:
+                rb_diag["no_conflito"] = int(m_alt.group(1))
+                rb_diag["pai"] = int(m_alt.group(2))
 
-        m_tio = re.search(r"Tio \((\d+)\) e (VERMELHO|PRETO)", texto_rb)
+        m_tio = re.search(r"Tio\s*(?:\((\d+)\))?\s*e\s*(VERMELHO|PRETO)", texto_rb)
         if m_tio:
-            rb_diag["tio"] = int(m_tio.group(1))
+            rb_diag["tio"] = int(m_tio.group(1)) if m_tio.group(1) else None
             rb_diag["cor_tio"] = m_tio.group(2)
 
-        recolores = re.findall(r"-\s*(Pai|Tio|Avo)\s*\((\d+)\)\s*passa a ser\s*(PRETO|VERMELHO)", texto_rb)
+        recolores = re.findall(r"(Pai|Tio|Avo)\s*\((\d+)\)\s*(?:passa a ser|->)\s*(PRETO|VERMELHO)", texto_rb)
         for papel, k, nova_cor in recolores:
-            rb_diag["recoloracoes"].append({
-                "papel": papel,
-                "chave": int(k),
-                "nova_cor": nova_cor
-            })
+            if not any(r["chave"] == int(k) and r["nova_cor"] == nova_cor for r in rb_diag["recoloracoes"]):
+                rb_diag["recoloracoes"].append({
+                    "papel": papel,
+                    "chave": int(k),
+                    "nova_cor": nova_cor
+                })
 
         if "CASO 1" in rb_diag["caso"]:
             rb_diag["tipo_acao"] = "Recoloração pura (sem rotação de ponteiros)"
@@ -348,32 +510,42 @@ def extrair_diagnostico_rebalanceamento(
             "status": "info"
         })
 
-        # Passo 2: Inserção Rubra e Conflito
-        passos_rb.append({
-            "ordem": 2,
-            "titulo": "2. Inserção Rubra & Violação",
-            "descricao": f"Conta #{chave} inserida como nó VERMELHO. Ocorre violação da Regra 4 de Cormen: nó ({rb_diag['no_conflito'] or chave}) e pai ({rb_diag['pai']}) são ambos nós vermelhos.",
-            "arvore": snapshots_rb.get("sem_fixup") if snapshots_rb else None,
-            "no_foco": rb_diag["no_conflito"] or chave,
-            "status": "warning"
-        })
+        simulados = snapshots_rb.get("passos_simulados") if snapshots_rb else None
+        if simulados:
+            for s in simulados:
+                passos_rb.append({
+                    "ordem": len(passos_rb) + 1,
+                    "titulo": f"{len(passos_rb) + 1}. {s['titulo']}",
+                    "descricao": s["descricao"],
+                    "arvore": s["arvore"],
+                    "no_foco": s["no_foco"],
+                    "status": s["status"]
+                })
+        else:
+            pai_label = f"#{rb_diag['pai']}" if rb_diag['pai'] else "vermelho"
+            passos_rb.append({
+                "ordem": 2,
+                "titulo": "2. Inserção Rubra & Violação",
+                "descricao": f"Conta #{chave} inserida como nó VERMELHO. Ocorre conflito entre nó #{rb_diag['no_conflito'] or chave} e pai {pai_label} (ambos vermelhos), violando a Regra 4 de Cormen.",
+                "arvore": snapshots_rb.get("sem_fixup") if snapshots_rb else None,
+                "no_foco": rb_diag["no_conflito"] or chave,
+                "status": "warning"
+            })
+            desc_rec = f" Recolorações efetuadas: {', '.join([r['papel'] + ' #' + str(r['chave']) + ' ➜ ' + r['nova_cor'] for r in rb_diag['recoloracoes']])}." if rb_diag['recoloracoes'] else ""
+            passos_rb.append({
+                "ordem": 3,
+                "titulo": "3. Rebalanceamento Estrutural",
+                "descricao": f"Aplicação do {rb_diag['caso']}: {rb_diag['tipo_acao']}.{desc_rec}",
+                "arvore": snapshots_rb.get("final") if snapshots_rb else None,
+                "no_foco": rb_diag["no_conflito"] or chave,
+                "status": "success"
+            })
 
-        # Passo 3: Rebalanceamento
-        desc_rec = f" Recolorações efetuadas: {', '.join([r['papel'] + ' #' + str(r['chave']) + ' ➜ ' + r['nova_cor'] for r in rb_diag['recoloracoes']])}." if rb_diag['recoloracoes'] else ""
+        # Passo Final: Árvore Resultante Válida
         passos_rb.append({
-            "ordem": 3,
-            "titulo": "3. Rebalanceamento Estrutural",
-            "descricao": f"Aplicação do {rb_diag['caso']}: {rb_diag['tipo_acao']}.{desc_rec}",
-            "arvore": snapshots_rb.get("final") if snapshots_rb else None,
-            "no_foco": rb_diag["no_conflito"] or chave,
-            "status": "success"
-        })
-
-        # Passo 4: Árvore Resultante Válida
-        passos_rb.append({
-            "ordem": 4,
-            "titulo": "4. Árvore Resultante Válida",
-            "descricao": "Ajuste concluído com sucesso. A raiz permanece preta e todos os caminhos até as folhas mantêm rigorosamente a mesma altura negra (bh).",
+            "ordem": len(passos_rb) + 1,
+            "titulo": f"{len(passos_rb) + 1}. Árvore Resultante Válida",
+            "descricao": "Ajuste concluído com sucesso. A raiz permanece estritamente PRETA e todos os caminhos até as folhas mantêm rigorosamente a mesma altura negra (bh), atendendo as 5 propriedades de Cormen.",
             "arvore": snapshots_rb.get("final") if snapshots_rb else None,
             "no_foco": None,
             "status": "success"
@@ -595,7 +767,8 @@ def rota_inserir_conta(req: InserirContaRequest):
 
     # Gera estados intermediários (nó inserido antes da rotação/fixup)
     raiz_unrotated_avl = serializar_no_avl(gerar_arvore_avl_desbalanceada(store.avl.raiz, conta))
-    raiz_unfixed_rb = serializar_no_rb(gerar_arvore_rb_sem_fixup(store.rb, conta), store.rb.NIL)
+    passos_simulados_rb = simular_passos_completos_rb(store.rb, conta)
+    raiz_unfixed_rb = passos_simulados_rb[0]["arvore"] if passos_simulados_rb else None
 
     sucesso_avl: bool = bool(store.avl.inserir(cast(Any, conta)))
     sucesso_rb: bool = bool(store.rb.inserir(cast(Any, conta)))
@@ -613,6 +786,7 @@ def rota_inserir_conta(req: InserirContaRequest):
     snapshots_rb = {
         "antes": raiz_antes_rb,
         "sem_fixup": raiz_unfixed_rb,
+        "passos_simulados": passos_simulados_rb,
         "final": raiz_final_rb
     }
 
@@ -785,27 +959,55 @@ def rota_aplicar_preset(nome_preset: str):
         )
 
     itens = presets_definidos[nome_preset]
-    for chave, titular, saldo in itens:
-        conta: Any = ContaBancaria(
+    for chave, titular, saldo in itens[:-1]:
+        conta_pre: Any = ContaBancaria(
             numero_conta=chave,
             titular=titular,
             agencia="0001",
             tipo="Corrente",
             saldo=saldo
         )
-        store.avl.inserir(cast(Any, conta))
-        store.rb.inserir(cast(Any, conta))
+        store.avl.inserir(cast(Any, conta_pre))
+        store.rb.inserir(cast(Any, conta_pre))
+
+    _ = store.capturar_novos_logs()
+
+    ult_chave, ult_titular, ult_saldo = itens[-1]
+    ult_conta: Any = ContaBancaria(
+        numero_conta=ult_chave,
+        titular=ult_titular,
+        agencia="0001",
+        tipo="Corrente",
+        saldo=ult_saldo
+    )
+
+    raiz_antes_avl = serializar_no_avl(store.avl.raiz)
+    raiz_antes_rb = serializar_no_rb(store.rb.raiz, store.rb.NIL)
+    raiz_unrotated_avl = serializar_no_avl(gerar_arvore_avl_desbalanceada(store.avl.raiz, ult_conta))
+    passos_simulados_rb = simular_passos_completos_rb(store.rb, ult_conta)
+
+    store.avl.inserir(cast(Any, ult_conta))
+    store.rb.inserir(cast(Any, ult_conta))
 
     novos_logs = store.capturar_novos_logs()
     raiz_final_avl = serializar_no_avl(store.avl.raiz)
     raiz_final_rb = serializar_no_rb(store.rb.raiz, store.rb.NIL)
-    snapshots_avl = {"final": raiz_final_avl}
-    snapshots_rb = {"final": raiz_final_rb}
+
+    snapshots_avl = {
+        "antes": raiz_antes_avl,
+        "desbalanceada": raiz_unrotated_avl,
+        "final": raiz_final_avl
+    }
+    snapshots_rb = {
+        "antes": raiz_antes_rb,
+        "passos_simulados": passos_simulados_rb,
+        "final": raiz_final_rb
+    }
     diag = extrair_diagnostico_rebalanceamento(
         novos_logs["avl"],
         novos_logs["rb"],
         "PRESET",
-        0,
+        ult_chave,
         snapshots_avl=snapshots_avl,
         snapshots_rb=snapshots_rb
     )
