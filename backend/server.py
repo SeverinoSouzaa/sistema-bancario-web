@@ -249,10 +249,10 @@ def rota_buscar_conta(req: OperacaoChaveRequest):
     res_avl = store.avl.buscar(req.numero_conta)
     res_rb = store.rb.buscar(req.numero_conta)
 
-    encontrada = (res_avl is not None or res_rb is not None)
+    c = res_avl if res_avl is not None else res_rb
+    encontrada = c is not None
     conta_info = None
-    if encontrada:
-        c = res_avl or res_rb
+    if c is not None:
         conta_info = {
             "numero_conta": c.numero_conta,
             "titular": c.titular,
