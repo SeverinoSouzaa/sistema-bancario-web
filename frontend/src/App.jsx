@@ -35,9 +35,13 @@ export default function App() {
   const [highlightKey, setHighlightKey] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
 
-  // View Mode: 'split' (Lado a Lado), 'avl' (Foco AVL), 'rb' (Foco Rubro-Negra), 'traversals' (Caminhamentos e Extremos)
+  // View Mode: 'split' (Lado a Lado), 'avl' (Foco na AVL), 'rb' (Foco na Rubro-Negra), 'traversals' (Caminhamentos e Extremos)
   const [viewMode, setViewMode] = useState('split');
-  const [modoDetalhado, setModoDetalhado] = useState(true);
+
+  // Step-by-step Interactive Tree State (for Focus Views)
+  const [stepTreeAVL, setStepTreeAVL] = useState(null);
+  const [stepTreeRB, setStepTreeRB] = useState(null);
+  const [stepFocusKey, setStepFocusKey] = useState(null);
 
   // Drawers & Modals
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -498,13 +502,18 @@ export default function App() {
           <div className="flex items-center gap-1">
             {[
               { id: 'split', label: 'Lado a Lado' },
-              { id: 'avl', label: 'Foco AVL (Passo a Passo)' },
-              { id: 'rb', label: 'Foco Rubro-Negra (Passo a Passo)' },
+              { id: 'avl', label: 'Foco na AVL' },
+              { id: 'rb', label: 'Foco na Rubro-Negra' },
               { id: 'traversals', label: 'Caminhamentos & Extremos' }
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => setViewMode(tab.id)}
+                onClick={() => {
+                  setViewMode(tab.id);
+                  setStepTreeAVL(null);
+                  setStepTreeRB(null);
+                  setStepFocusKey(null);
+                }}
                 className={`text-xs px-3 py-1.5 rounded-md transition-all font-medium ${
                   viewMode === tab.id
                     ? 'bg-slate-100 text-slate-900 font-semibold shadow-2xs'
@@ -518,21 +527,6 @@ export default function App() {
 
           {/* Right Header Status & Actions */}
           <div className="flex items-center gap-3">
-            {/* Modo Detalhado Toggle (Opção 1 do terminal / Edital Seção 2.4) */}
-            <button
-              type="button"
-              onClick={() => setModoDetalhado(!modoDetalhado)}
-              className={`text-xs px-2.5 py-1.5 rounded-md border flex items-center gap-1.5 transition-colors font-medium ${
-                modoDetalhado
-                  ? 'bg-slate-900 text-white border-slate-900 shadow-2xs'
-                  : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-              }`}
-              title="Alternar Modo Detalhado (Explicativo Passo a Passo) [ON/OFF] - Conforme Opção 1 do main.py e Seção 2.4 do Edital"
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Modo Detalhado {modoDetalhado ? 'ON' : 'OFF'}</span>
-            </button>
-
             {/* Backend Status Pill */}
             <div
               className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border ${
@@ -754,8 +748,8 @@ export default function App() {
           ) : (
             /* ================= VIEW: CANVAS DE VISUALIZAÇÃO GRÁFICA ================= */
             <div className="flex-1 flex flex-col p-4 overflow-hidden relative">
-              {/* Quick Rebalance Alert Banner in Split View (Heurística #1) */}
-              {viewMode === 'split' && modoDetalhado && (data?.ultimo_diagnostico?.avl?.houve_rebalanceamento || data?.ultimo_diagnostico?.rubro_negra?.houve_rebalanceamento) && (
+              {/* Quick Rebalance Alert Banner in Split View */}
+              {viewMode === 'split' && (data?.ultimo_diagnostico?.avl?.houve_rebalanceamento || data?.ultimo_diagnostico?.rubro_negra?.houve_rebalanceamento) && (
                 <div className="mb-3 px-3.5 py-1.5 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-between text-xs text-indigo-950 shrink-0 shadow-2xs">
                   <div className="flex items-center gap-2">
                     <span className="w-2 h-2 rounded-full bg-indigo-600 animate-pulse" />
@@ -769,18 +763,26 @@ export default function App() {
                   <div className="flex items-center gap-2">
                     {data.ultimo_diagnostico.avl.houve_rebalanceamento && (
                       <button
-                        onClick={() => setViewMode('avl')}
+                        onClick={() => {
+                          setViewMode('avl');
+                          setStepTreeAVL(null);
+                          setStepFocusKey(null);
+                        }}
                         className="px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-indigo-800 text-[11px] font-semibold hover:bg-indigo-50 transition-colors shadow-2xs"
                       >
-                        Inspecionar AVL ➜
+                        Inspecionar na AVL ➜
                       </button>
                     )}
                     {data.ultimo_diagnostico.rubro_negra.houve_rebalanceamento && (
                       <button
-                        onClick={() => setViewMode('rb')}
+                        onClick={() => {
+                          setViewMode('rb');
+                          setStepTreeRB(null);
+                          setStepFocusKey(null);
+                        }}
                         className="px-2 py-0.5 rounded-md bg-white border border-indigo-200 text-indigo-800 text-[11px] font-semibold hover:bg-indigo-50 transition-colors shadow-2xs"
                       >
-                        Inspecionar Rubro-Negra ➜
+                        Inspecionar na Rubro-Negra ➜
                       </button>
                     )}
                   </div>
@@ -795,7 +797,7 @@ export default function App() {
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full border border-slate-900 bg-white" />
                       <span className="text-xs font-semibold text-slate-800">
-                        Árvore AVL {viewMode === 'avl' ? '· Laboratório de Rebalanceamento Passo a Passo' : ''}
+                        Árvore AVL
                       </span>
                       <span className="text-[10px] text-slate-400 font-mono">|FB| ≤ 1</span>
                     </div>
@@ -813,7 +815,7 @@ export default function App() {
                     <div className="flex items-center gap-2">
                       <div className="w-2.5 h-2.5 rounded-full bg-slate-900" />
                       <span className="text-xs font-semibold text-slate-800">
-                        Árvore Rubro-Negra {viewMode === 'rb' ? '· Laboratório de Casos do Cormen' : ''}
+                        Árvore Rubro-Negra
                       </span>
                       <span className="text-[10px] text-slate-400 font-mono">Cormen Cap. 13</span>
                     </div>
@@ -854,19 +856,20 @@ export default function App() {
                 <div className="flex-1 flex gap-4 overflow-hidden relative">
                   <div className="flex-1 h-full min-h-0">
                     <BinaryTreeVisualizer
-                      root={data?.avl?.raiz}
+                      root={stepTreeAVL || data?.avl?.raiz}
                       type="avl"
-                      highlightKey={highlightKey}
+                      highlightKey={stepFocusKey || highlightKey}
                       onSelectNode={(node) => setSelectedNode({ ...node, treeType: 'AVL' })}
                     />
                   </div>
-                  {modoDetalhado && (
-                    <DetailedExecutionInspector
-                      diagnostic={data?.ultimo_diagnostico}
-                      treeType="avl"
-                      onHighlightKey={setHighlightKey}
-                    />
-                  )}
+                  <DetailedExecutionInspector
+                    diagnostic={data?.ultimo_diagnostico}
+                    treeType="avl"
+                    onSelectStep={(step) => {
+                      setStepTreeAVL(step?.arvore || null);
+                      setStepFocusKey(step?.no_foco || null);
+                    }}
+                  />
                 </div>
               )}
 
@@ -874,20 +877,21 @@ export default function App() {
                 <div className="flex-1 flex gap-4 overflow-hidden relative">
                   <div className="flex-1 h-full min-h-0">
                     <BinaryTreeVisualizer
-                      root={data?.rubro_negra?.raiz}
+                      root={stepTreeRB || data?.rubro_negra?.raiz}
                       type="rb"
                       showNil={showNil}
-                      highlightKey={highlightKey}
+                      highlightKey={stepFocusKey || highlightKey}
                       onSelectNode={(node) => setSelectedNode({ ...node, treeType: 'Rubro-Negra' })}
                     />
                   </div>
-                  {modoDetalhado && (
-                    <DetailedExecutionInspector
-                      diagnostic={data?.ultimo_diagnostico}
-                      treeType="rb"
-                      onHighlightKey={setHighlightKey}
-                    />
-                  )}
+                  <DetailedExecutionInspector
+                    diagnostic={data?.ultimo_diagnostico}
+                    treeType="rb"
+                    onSelectStep={(step) => {
+                      setStepTreeRB(step?.arvore || null);
+                      setStepFocusKey(step?.no_foco || null);
+                    }}
+                  />
                 </div>
               )}
 
