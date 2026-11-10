@@ -277,6 +277,8 @@ export default function App() {
       setLogsRecentes({ avl: [], rb: [] });
       setHighlightKey(null);
       setSearchResult(null);
+      setSearchAnalysis(null);
+      setChaveOperacao('');
       setSelectedNode(null);
       setStepTreeAVL(null);
       setStepTreeRB(null);
