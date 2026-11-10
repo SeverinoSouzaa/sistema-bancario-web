@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import BinaryTreeVisualizer from './components/BinaryTreeVisualizer';
 import DetailedExecutionInspector from './components/DetailedExecutionInspector';
+import ExperimentsDashboard from './components/ExperimentsDashboard';
 
 const API_BASE = 'http://localhost:8000';
 
@@ -35,13 +36,31 @@ export default function App() {
   const [highlightKey, setHighlightKey] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
 
-  // View Mode: 'split' (Lado a Lado), 'avl' (Foco na AVL), 'rb' (Foco na Rubro-Negra), 'traversals' (Caminhamentos e Extremos)
+  // View Mode: 'split' (Lado a Lado), 'avl' (Foco na AVL), 'rb' (Foco na Rubro-Negra), 'traversals' (Caminhamentos e Extremos), 'experiments' (Experimentos Científicos)
   const [viewMode, setViewMode] = useState('split');
 
   // Step-by-step Interactive Tree State (for Focus Views)
   const [stepTreeAVL, setStepTreeAVL] = useState(null);
   const [stepTreeRB, setStepTreeRB] = useState(null);
   const [stepFocusKey, setStepFocusKey] = useState(null);
+
+  // Experimentos Automáticos (Item 9 do Terminal · Seção 5)
+  const [experimentMode, setExperimentMode] = useState('padrao'); // 'padrao' | 'rapida' | 'custom'
+  const [experimentCustomN, setExperimentCustomN] = useState('500');
+  const [experimentRunKey, setExperimentRunKey] = useState(0);
+  const [showCustomNInput, setShowCustomNInput] = useState(false);
+
+  const handleDispararExperimento = (modo, customVal = '500') => {
+    setExperimentMode(modo);
+    if (modo === 'custom') {
+      setExperimentCustomN(customVal);
+    }
+    setExperimentRunKey((prev) => prev + 1);
+    setViewMode('experiments');
+    setStepTreeAVL(null);
+    setStepTreeRB(null);
+    setStepFocusKey(null);
+  };
 
   // Drawers & Modals
   const [showGuideModal, setShowGuideModal] = useState(false);
@@ -420,39 +439,111 @@ export default function App() {
           </div>
 
           <div className="border-t border-slate-200 pt-4">
-            {/* Section: Cenários Demonstrativos da Banca */}
+            {/* Section: 9. Experimentos Automáticos (Paridade com Item 9 do Terminal) */}
             <div className="flex items-center justify-between mb-2">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                Cenários da Defesa (AED II)
+                9. Experimentos Automáticos
+              </span>
+              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono font-semibold border border-indigo-200">
+                Seção 5
               </span>
             </div>
             <p className="text-[11px] text-slate-500 mb-3">
-              Conjuntos de teste para demonstrar os casos do Edital à banca avaliadora:
+              Baterias científicas reproduzíveis em tempo real via terminal (seed = 42):
             </p>
 
             <div className="space-y-1.5">
-              {[
-                { id: 'pior_caso_abb', label: '1. Pior Caso ABB', desc: 'Seq. ordenada 1..6 (Desbalanceamento)' },
-                { id: 'tio_vermelho', label: '2. Tio Vermelho (Caso 1)', desc: 'Cormen Cap. 13 (Apenas recoloração)' },
-                { id: 'rotacao_dupla', label: '3. Rotação Dupla', desc: 'Caso Zigue-Zague (AVL e RB)' },
-                { id: 'remocao_grau_2', label: '4. Remoção Grau 2', desc: 'Encerramento de nó com 2 filhos' }
-              ].map((c) => (
+              {/* Opção 1: Bateria Padrão */}
+              <button
+                type="button"
+                onClick={() => handleDispararExperimento('padrao')}
+                className={`w-full text-left p-2.5 rounded-lg border transition-all group ${
+                  viewMode === 'experiments' && experimentMode === 'padrao'
+                    ? 'border-indigo-400 bg-indigo-50/70 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800 group-hover:text-slate-950">
+                    1. Bateria Padrão do Edital
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+                  N = 100, 1.000 e 10.000 (com trava)
+                </p>
+              </button>
+
+              {/* Opção 2: Bateria Rápida */}
+              <button
+                type="button"
+                onClick={() => handleDispararExperimento('rapida')}
+                className={`w-full text-left p-2.5 rounded-lg border transition-all group ${
+                  viewMode === 'experiments' && experimentMode === 'rapida'
+                    ? 'border-indigo-400 bg-indigo-50/70 shadow-xs'
+                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-800 group-hover:text-slate-950">
+                    2. Bateria Rápida de Validação
+                  </span>
+                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+                <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
+                  N = 100 (Instantâneo ~13ms)
+                </p>
+              </button>
+
+              {/* Opção 3: Tamanho Personalizado */}
+              <div
+                className={`rounded-lg border transition-all overflow-hidden ${
+                  viewMode === 'experiments' && experimentMode === 'custom'
+                    ? 'border-indigo-400 bg-indigo-50/40'
+                    : 'border-slate-200 bg-white'
+                }`}
+              >
                 <button
-                  key={c.id}
                   type="button"
-                  onClick={() => handleCarregarPreset(c.id, c.label)}
-                  disabled={loading}
-                  className="w-full text-left p-2.5 rounded-lg border border-slate-200 hover:border-slate-300 hover:bg-slate-50 transition-all group disabled:opacity-50"
+                  onClick={() => setShowCustomNInput(!showCustomNInput)}
+                  className="w-full text-left p-2.5 flex items-center justify-between group hover:bg-slate-50/60 transition-colors"
                 >
-                  <div className="flex items-center justify-between">
+                  <div>
                     <span className="text-xs font-semibold text-slate-800 group-hover:text-slate-950">
-                      {c.label}
+                      3. Tamanho Personalizado
                     </span>
-                    <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                    <p className="text-[11px] text-slate-500 mt-0.5">
+                      Definir N livremente
+                    </p>
                   </div>
-                  <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">{c.desc}</p>
+                  <ChevronRight
+                    className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+                      showCustomNInput ? 'rotate-90' : ''
+                    }`}
+                  />
                 </button>
-              ))}
+
+                {showCustomNInput && (
+                  <div className="p-2.5 pt-0 border-t border-slate-100 flex items-center gap-1.5 mt-1 bg-white">
+                    <input
+                      type="number"
+                      min="1"
+                      max="100000"
+                      placeholder="Ex: 500"
+                      value={experimentCustomN}
+                      onChange={(e) => setExperimentCustomN(e.target.value)}
+                      className="w-full text-xs px-2.5 py-1.5 rounded-md border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleDispararExperimento('custom', experimentCustomN)}
+                      className="text-xs px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shrink-0 shadow-2xs"
+                    >
+                      Executar
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -504,7 +595,8 @@ export default function App() {
               { id: 'split', label: 'Lado a Lado' },
               { id: 'avl', label: 'Foco na AVL' },
               { id: 'rb', label: 'Foco na Rubro-Negra' },
-              { id: 'traversals', label: 'Caminhamentos & Extremos' }
+              { id: 'traversals', label: 'Caminhamentos & Extremos' },
+              { id: 'experiments', label: 'Experimentos Científicos' }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -584,7 +676,17 @@ export default function App() {
 
         {/* Main Content Viewport */}
         <div className="flex-1 overflow-hidden relative flex flex-col">
-          {viewMode === 'traversals' ? (
+          {viewMode === 'experiments' ? (
+            /* ================= VIEW: EXPERIMENTOS CIENTÍFICOS (Item 9 do Terminal · Seção 5) ================= */
+            <ExperimentsDashboard
+              apiBase={API_BASE}
+              onBackToTrees={() => setViewMode('split')}
+              onNotify={notify}
+              initialMode={experimentMode}
+              initialN={experimentCustomN}
+              key={experimentRunKey}
+            />
+          ) : viewMode === 'traversals' ? (
             /* ================= VIEW: CAMINHAMENTOS & EXTREMOS (Paridade com main.py Opção 5) ================= */
             <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full space-y-6">
               <div>

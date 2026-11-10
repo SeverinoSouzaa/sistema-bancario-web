@@ -3,6 +3,9 @@ import os
 import re
 import time
 import copy
+import io
+import contextlib
+import tempfile
 from typing import Optional, List, Dict, Any, cast
 from pydantic import BaseModel, Field
 from fastapi import FastAPI, HTTPException
@@ -18,10 +21,32 @@ try:
     from modelos import ContaBancaria, Cor, NoAVL, NoRB  # type: ignore
     from avl import ArvoreAVL  # type: ignore
     from rubro_negra import ArvoreRubroNegra  # type: ignore
+    from experimentos import (  # type: ignore
+        gerar_contas_crescentes,
+        gerar_contas_aleatorias,
+        executar_experimento_crescente,
+        executar_experimentos_completos,
+        imprimir_tabela_1_formatada,
+        imprimir_detalhes_cenario,
+        imprimir_quadro_metricas,
+        salvar_resultados_csv,
+        salvar_relatorio_markdown,
+    )
 except ImportError:
     from backend_original.modelos import ContaBancaria, Cor, NoAVL, NoRB  # type: ignore
     from backend_original.avl import ArvoreAVL  # type: ignore
     from backend_original.rubro_negra import ArvoreRubroNegra  # type: ignore
+    from backend_original.experimentos import (  # type: ignore
+        gerar_contas_crescentes,
+        gerar_contas_aleatorias,
+        executar_experimento_crescente,
+        executar_experimentos_completos,
+        imprimir_tabela_1_formatada,
+        imprimir_detalhes_cenario,
+        imprimir_quadro_metricas,
+        salvar_resultados_csv,
+        salvar_relatorio_markdown,
+    )
 
 app = FastAPI(
     title="Visualizador de Árvores Balanceadas - Sistema Bancário",
@@ -1263,6 +1288,108 @@ def rota_aplicar_preset(nome_preset: str):
         "diagnostico": diag,
         "dados": obter_estado_completo()
     }
+
+
+class ExperimentoRequest(BaseModel):
+    n: int = Field(..., gt=0, description="Tamanho N da amostra")
+    cenario: str = Field("ambos", description="'ambos', 'aleatorio' ou 'crescente'")
+    semente: int = Field(42, description="Semente determinística")
+
+
+class ExportarExperimentoRequest(BaseModel):
+    formato: str = Field("csv", description="'csv' ou 'markdown'")
+    resultados: List[Dict[str, Any]] = Field(..., description="Lista de resultados das baterias")
+
+
+@app.post("/api/experimentos/executar")
+def api_executar_experimento(req: ExperimentoRequest):
+    try:
+        n = req.n
+        semente = req.semente
+        cenario = req.cenario.lower()
+
+        res_crescente = None
+        res_aleatorio = None
+
+        if cenario in ("ambos", "crescente"):
+            res_crescente = executar_experimento_crescente(n, semente=semente)
+        if cenario in ("ambos", "aleatorio"):
+            res_aleatorio = executar_experimentos_completos(n, semente=semente)
+
+        # Captura da saída formatada do terminal idêntica à função de impressão oficial
+        buf = io.StringIO()
+        if res_aleatorio is not None and res_crescente is not None:
+            with contextlib.redirect_stdout(buf):
+                imprimir_tabela_1_formatada(res_aleatorio, res_crescente)
+        elif res_aleatorio is not None:
+            with contextlib.redirect_stdout(buf):
+                imprimir_tabela_1_formatada(res_aleatorio, None)
+        elif res_crescente is not None:
+            with contextlib.redirect_stdout(buf):
+                imprimir_detalhes_cenario(res_crescente, 1, "CENARIO EM ORDEM CRESCENTE (PIOR CASO ABB)", eh_crescente=True)
+                imprimir_quadro_metricas(res_crescente, "TABELA 2: METRICAS CONSOLIDADAS (ORDEM CRESCENTE - PIOR CASO ABB)")
+
+        saida_terminal = buf.getvalue()
+
+        return {
+            "sucesso": True,
+            "n": n,
+            "semente": semente,
+            "res_crescente": res_crescente,
+            "res_aleatorio": res_aleatorio,
+            "saida_terminal": saida_terminal
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao executar benchmark para N={req.n}: {str(e)}")
+
+
+@app.post("/api/experimentos/exportar")
+def api_exportar_experimento(req: ExportarExperimentoRequest):
+    try:
+        formato = req.formato.lower()
+        resultados = req.resultados
+
+        if not resultados:
+            raise HTTPException(status_code=400, detail="Nenhum resultado fornecido para exportação.")
+
+        if formato == "csv":
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".csv") as tmp:
+                tmp_path = tmp.name
+            try:
+                salvar_resultados_csv(resultados, tmp_path)
+                with open(tmp_path, "r", encoding="utf-8") as f:
+                    conteudo = f.read()
+            finally:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+            nome_arquivo = "resultados_experimentos.csv"
+            mimetype = "text/csv"
+
+        elif formato in ("markdown", "md"):
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".md") as tmp:
+                tmp_path = tmp.name
+            try:
+                salvar_relatorio_markdown(resultados, tmp_path)
+                with open(tmp_path, "r", encoding="utf-8") as f:
+                    conteudo = f.read()
+            finally:
+                if os.path.exists(tmp_path):
+                    os.unlink(tmp_path)
+            nome_arquivo = "resultados_experimentos.md"
+            mimetype = "text/markdown"
+
+        else:
+            raise HTTPException(status_code=400, detail="Formato não suportado. Use 'csv' ou 'markdown'.")
+
+        return {
+            "sucesso": True,
+            "formato": formato,
+            "nome_arquivo": nome_arquivo,
+            "mimetype": mimetype,
+            "conteudo": conteudo
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro ao exportar resultados: {str(e)}")
 
 
 DIST_PATH = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "frontend", "dist"))
