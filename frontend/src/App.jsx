@@ -36,7 +36,11 @@ import ExperimentsDashboard from './components/ExperimentsDashboard';
 import SearchAnalysisView from './components/SearchAnalysisView';
 import treeLogo from './assets/tree-logo.png';
 
-const API_BASE = 'http://localhost:8000';
+// Determinação dinâmica da URL base da API:
+// - Em modo dev (npm run dev): aponta para o backend local em http://localhost:8000
+// - Em produção (via app.py local OU hospedado na nuvem como Render/Railway): rota relativa (''),
+//   conectando automaticamente ao mesmo host de onde o site foi aberto sem precisar mexer em nada!
+const API_BASE = import.meta.env.DEV ? 'http://localhost:8000' : '';
 
 export default function App() {
   // Tree State

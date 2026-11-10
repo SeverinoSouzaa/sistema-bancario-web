@@ -26,7 +26,7 @@ import {
 } from 'lucide-react';
 
 export default function ExperimentsDashboard({
-  apiBase = 'http://localhost:8000',
+  apiBase = (typeof import.meta !== 'undefined' && import.meta.env?.DEV) ? 'http://localhost:8000' : '',
   onBackToTrees,
   onNotify,
   initialMode = 'padrao',
