@@ -259,7 +259,7 @@ export default function ExperimentsDashboard({
                   Laboratório de Análise Experimental de Desempenho
                 </h1>
                 <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
-                  Edital AED II · Seção 5
+                  Benchmark Comparativo
                 </span>
               </div>
               <p className="text-xs text-slate-500 mt-1">
@@ -387,7 +387,7 @@ export default function ExperimentsDashboard({
               {!stepperPaused && currentStepIndex >= stepperQueue.length && (
                 <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-xs font-semibold">
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                  <span>Bateria Oficial do Edital 100% Concluída</span>
+                  <span>Bateria de Experimentos 100% Concluída</span>
                 </div>
               )}
             </div>
@@ -569,11 +569,11 @@ export default function ExperimentsDashboard({
               <div>
                 <h3 className="text-sm font-semibold text-slate-900">
                   {selectedCenarioTab === 'aleatorio'
-                    ? `Tabela 1: Métricas Consolidadas Oficiais (Cenário Real Bancário - N = ${selectedN.toLocaleString()})`
-                    : `Tabela 2: Métricas Consolidadas Oficiais (Ordem Crescente / Pior Caso ABB - N = ${selectedN.toLocaleString()})`}
+                    ? `Tabela 1: Métricas Consolidadas (Cenário Real Bancário - N = ${selectedN.toLocaleString()})`
+                    : `Tabela 2: Métricas Consolidadas (Ordem Crescente / Pior Caso ABB - N = ${selectedN.toLocaleString()})`}
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Conforme exigido na Seção 5.1 do Edital de AED II para avaliação pela banca examinadora.
+                  Métricas de complexidade assintótica e esforço estrutural de balanceamento.
                 </p>
               </div>
 
@@ -590,7 +590,7 @@ export default function ExperimentsDashboard({
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
-                    <th className="py-3 px-6">Métrica Obrigatória do Edital</th>
+                    <th className="py-3 px-6">Métrica de Desempenho</th>
                     <th className="py-3 px-6 text-right">Árvore AVL</th>
                     <th className="py-3 px-6 text-right">Árvore Rubro-Negra</th>
                     <th className="py-3 px-6 text-right">Diferencial Teórico</th>
@@ -645,12 +645,12 @@ export default function ExperimentsDashboard({
                     </td>
                   </tr>
 
-                  {/* Linha 4 (Edital 30%) */}
+                  {/* Linha 4 (Amostra 30%) */}
                   <tr className="bg-slate-50/40 hover:bg-slate-50 transition-colors font-medium">
                     <td className="py-3 px-6 text-slate-900 flex items-center gap-1.5">
-                      <span>Rotações na remoção (30% dos nós - Edital)</span>
+                      <span>Rotações na remoção (30% dos nós)</span>
                       <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 font-semibold">
-                        Principal
+                        Amostra 30%
                       </span>
                     </td>
                     <td className="py-3 px-6 text-right font-mono text-slate-900 font-semibold">
@@ -696,7 +696,7 @@ export default function ExperimentsDashboard({
 
                   {/* Linha 7 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-6 font-medium text-slate-800">Recolorações (Remoção 30% - Edital)</td>
+                    <td className="py-3 px-6 font-medium text-slate-800">Recolorações (Remoção 30% dos nós)</td>
                     <td className="py-3 px-6 text-right font-mono text-slate-400">N/A (Não se aplica)</td>
                     <td className="py-3 px-6 text-right font-mono font-bold text-rose-700">
                       {activeData.rb_rec_rem_30.toLocaleString()}
@@ -764,7 +764,7 @@ export default function ExperimentsDashboard({
 
                   {/* Linha 12 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
-                    <td className="py-3 px-6 font-medium text-slate-800">Tempo total remoção (30% - Edital)</td>
+                    <td className="py-3 px-6 font-medium text-slate-800">Tempo total remoção (30% dos nós)</td>
                     <td className="py-3 px-6 text-right font-mono text-slate-900">
                       {activeData.avl_tempo_rem_30_ms.toFixed(3)} ms
                     </td>
@@ -834,7 +834,7 @@ export default function ExperimentsDashboard({
                 {/* Bar 2: Remoção 30% */}
                 <div>
                   <div className="flex justify-between text-xs mb-1 font-medium text-slate-700">
-                    <span>Remoção Parcial 30% (Edital)</span>
+                    <span>Remoção Parcial (30% das contas)</span>
                     <span className="font-mono">{activeData.avl_rot_rem_30} vs {activeData.rb_rot_rem_30}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 h-5">
@@ -965,7 +965,7 @@ export default function ExperimentsDashboard({
 
                 <div>
                   <div className="flex justify-between text-xs mb-1 font-medium text-slate-700">
-                    <span>Tempo de Remoção 30% (Edital)</span>
+                    <span>Tempo de Remoção (30% das contas)</span>
                     <span className="font-mono">{activeData.avl_tempo_rem_30_ms.toFixed(2)}ms vs {activeData.rb_tempo_rem_30_ms.toFixed(2)}ms</span>
                   </div>
                   <div className="grid grid-cols-2 gap-2 h-5">

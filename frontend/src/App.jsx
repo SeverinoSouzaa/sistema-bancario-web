@@ -19,7 +19,11 @@ import {
   CreditCard,
   User,
   Sliders,
-  Maximize2
+  Maximize2,
+  UserPlus,
+  CircleDot,
+  Zap,
+  Activity
 } from 'lucide-react';
 import BinaryTreeVisualizer from './components/BinaryTreeVisualizer';
 import DetailedExecutionInspector from './components/DetailedExecutionInspector';
@@ -36,7 +40,7 @@ export default function App() {
   const [highlightKey, setHighlightKey] = useState(null);
   const [selectedNode, setSelectedNode] = useState(null);
 
-  // View Mode: 'split' (Lado a Lado), 'avl' (Foco na AVL), 'rb' (Foco na Rubro-Negra), 'traversals' (Caminhamentos e Extremos), 'experiments' (Experimentos Científicos)
+  // View Mode: 'split' (Lado a Lado), 'avl' (Foco na AVL), 'rb' (Foco na Rubro-Negra), 'traversals' (Caminhamentos e Extremos), 'experiments' (Experimentos Automáticos)
   const [viewMode, setViewMode] = useState('split');
 
   // Step-by-step Interactive Tree State (for Focus Views)
@@ -44,11 +48,15 @@ export default function App() {
   const [stepTreeRB, setStepTreeRB] = useState(null);
   const [stepFocusKey, setStepFocusKey] = useState(null);
 
-  // Experimentos Automáticos (Item 9 do Terminal · Seção 5)
+  // Experimentos Automáticos (Item 9 do Terminal)
   const [experimentMode, setExperimentMode] = useState('padrao'); // 'padrao' | 'rapida' | 'custom'
   const [experimentCustomN, setExperimentCustomN] = useState('500');
   const [experimentRunKey, setExperimentRunKey] = useState(0);
   const [showCustomNInput, setShowCustomNInput] = useState(false);
+
+  // Floating Action Modals (Cadastrar e Consultar)
+  const [showCadastrarModal, setShowCadastrarModal] = useState(false);
+  const [showConsultarModal, setShowConsultarModal] = useState(false);
 
   const handleDispararExperimento = (modo, customVal = '500') => {
     setExperimentMode(modo);
@@ -67,8 +75,7 @@ export default function App() {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showConsoleDrawer, setShowConsoleDrawer] = useState(false);
 
-  // Operation Forms
-  const [sidebarTab, setSidebarTab] = useState('inserir'); // 'inserir' | 'buscar'
+  // Operation Form States (used by Modals)
   const [numeroConta, setNumeroConta] = useState('');
   const [titular, setTitular] = useState('');
   const [saldo, setSaldo] = useState('1500.00');
@@ -261,260 +268,153 @@ export default function App() {
 
   return (
     <div className="flex h-screen w-screen overflow-hidden bg-slate-50 text-slate-900 font-sans antialiased">
-      {/* -------------------- LEFT SIDEBAR (Helicon Style) -------------------- */}
-      <aside className="w-80 border-r border-slate-200 bg-white flex flex-col shrink-0 select-none z-10">
+      {/* -------------------- LEFT SIDEBAR (RevenuePulseAI Minimalist Style) -------------------- */}
+      <aside className="w-72 border-r border-slate-200 bg-white flex flex-col shrink-0 select-none z-10">
         {/* Workspace Brand / Header */}
-        <div className="h-14 border-b border-slate-200 px-4 flex items-center justify-between">
+        <div className="h-14 border-b border-slate-200 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+            <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-xs">
               B
             </div>
             <div>
-              <h1 className="text-sm font-semibold text-slate-900 leading-tight">Sistema Bancário</h1>
-              <p className="text-[11px] text-slate-500 font-medium">AED II · UFAM / ICET</p>
+              <h1 className="text-xs font-bold text-slate-900 leading-tight">Sistema Bancário</h1>
+              <p className="text-[11px] text-slate-500 font-medium">Árvores Balanceadas</p>
             </div>
           </div>
-          <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600 font-semibold border border-slate-200">
+          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold border border-slate-200">
             v1.0
           </span>
         </div>
 
         {/* Sidebar Scrollable Body */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-6">
-          {/* Section: Operações Bancárias */}
+        <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-6">
+          {/* Section: VISUALIZAÇÃO DE ÁRVORES */}
           <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                Operações de Conta
-              </span>
-            </div>
-
-            {/* Segmented Control */}
-            <div className="grid grid-cols-2 p-1 bg-slate-100 rounded-lg text-xs font-medium mb-3 border border-slate-200">
-              <button
-                type="button"
-                onClick={() => setSidebarTab('inserir')}
-                className={`py-1.5 rounded-md transition-all ${
-                  sidebarTab === 'inserir'
-                    ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Cadastrar
-              </button>
-              <button
-                type="button"
-                onClick={() => setSidebarTab('buscar')}
-                className={`py-1.5 rounded-md transition-all ${
-                  sidebarTab === 'buscar'
-                    ? 'bg-white text-slate-900 shadow-xs font-semibold'
-                    : 'text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                Consultar / Excluir
-              </button>
-            </div>
-
-            {/* Tab: Inserir */}
-            {sidebarTab === 'inserir' && (
-              <form onSubmit={handleInserir} className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Número da Conta <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Ex: 20"
-                    value={numeroConta}
-                    onChange={(e) => setNumeroConta(e.target.value)}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Nome do Titular <span className="text-slate-400 font-normal">(opcional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Carlos Silva"
-                    value={titular}
-                    onChange={(e) => setTitular(e.target.value)}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Saldo (R$)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={saldo}
-                      onChange={(e) => setSaldo(e.target.value)}
-                      className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-medium text-slate-700 mb-1">Tipo</label>
-                    <select
-                      value={tipoConta}
-                      onChange={(e) => setTipoConta(e.target.value)}
-                      className="w-full text-xs px-2.5 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-                    >
-                      <option value="Corrente">Corrente</option>
-                      <option value="Poupanca">Poupança</option>
-                      <option value="Salario">Salário</option>
-                    </select>
-                  </div>
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full mt-2 text-xs font-semibold py-2 px-3 rounded-lg bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 transition-colors flex items-center justify-center gap-1.5 shadow-xs disabled:opacity-50"
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span>Inserir nas Duas Árvores</span>
-                </button>
-              </form>
-            )}
-
-            {/* Tab: Buscar / Remover */}
-            {sidebarTab === 'buscar' && (
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-700 mb-1">
-                    Número da Conta <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Digite a conta..."
-                    value={chaveOperacao}
-                    onChange={(e) => setChaveOperacao(e.target.value)}
-                    className="w-full text-xs px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 pt-1">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+              Visualização de Árvores
+            </span>
+            <div className="space-y-1">
+              {[
+                { id: 'split', label: 'Lado a Lado (Comparativo)', icon: ArrowRightLeft },
+                { id: 'avl', label: 'Foco na AVL', icon: Layers },
+                { id: 'rb', label: 'Foco na Rubro-Negra', icon: CircleDot },
+                { id: 'traversals', label: 'Caminhamentos & Extremos', icon: TrendingUp }
+              ].map((item) => {
+                const IconComponent = item.icon;
+                const isActive = viewMode === item.id;
+                return (
                   <button
-                    type="button"
-                    onClick={handleBuscar}
-                    disabled={loading || !chaveOperacao}
-                    className="text-xs font-medium py-2 px-3 rounded-lg border border-slate-300 bg-white text-slate-800 hover:bg-slate-50 active:bg-slate-100 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    key={item.id}
+                    onClick={() => {
+                      setViewMode(item.id);
+                      setStepTreeAVL(null);
+                      setStepTreeRB(null);
+                      setStepFocusKey(null);
+                    }}
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                      isActive
+                        ? 'bg-slate-900 text-white font-semibold shadow-xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                    }`}
                   >
-                    <Search className="w-3.5 h-3.5 text-slate-600" />
-                    <span>Localizar</span>
+                    <IconComponent className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <span>{item.label}</span>
                   </button>
-                  <button
-                    type="button"
-                    onClick={handleRemover}
-                    disabled={loading || !chaveOperacao}
-                    className="text-xs font-medium py-2 px-3 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 active:bg-rose-200 transition-colors flex items-center justify-center gap-1.5 disabled:opacity-50"
-                  >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                    <span>Encerrar</span>
-                  </button>
-                </div>
-
-                {/* Search result card */}
-                {searchResult && (
-                  <div className="p-3 rounded-lg border border-slate-200 bg-slate-50/80 mt-2 space-y-1">
-                    <div className="flex items-center justify-between text-xs">
-                      <span className="font-semibold text-slate-800">Conta #{searchResult.numero_conta}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded-sm bg-emerald-50 text-emerald-700 border border-emerald-200 font-medium">
-                        Ativa
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-600">Titular: <span className="font-medium text-slate-800">{searchResult.titular}</span></p>
-                    <p className="text-xs text-slate-600">Saldo: <span className="font-mono font-medium text-slate-800">R$ {searchResult.saldo.toFixed(2)}</span></p>
-                  </div>
-                )}
-              </div>
-            )}
+                );
+              })}
+            </div>
           </div>
 
-          <div className="border-t border-slate-200 pt-4">
-            {/* Section: 9. Experimentos Automáticos (Paridade com Item 9 do Terminal) */}
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
-                9. Experimentos Automáticos
-              </span>
-              <span className="text-[9px] uppercase px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 font-mono font-semibold border border-indigo-200">
-                Seção 5
-              </span>
-            </div>
-            <p className="text-[11px] text-slate-500 mb-3">
-              Baterias científicas reproduzíveis em tempo real via terminal (seed = 42):
-            </p>
+          {/* Section: OPERAÇÕES DE CONTA */}
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+              Operações de Conta
+            </span>
+            <div className="space-y-1">
+              <button
+                type="button"
+                onClick={() => setShowCadastrarModal(true)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-100/70 hover:text-slate-900 transition-colors text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <UserPlus className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors" />
+                  <span>Cadastrar Conta</span>
+                </div>
+                <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
 
-            <div className="space-y-1.5">
-              {/* Opção 1: Bateria Padrão */}
+              <button
+                type="button"
+                onClick={() => setShowConsultarModal(true)}
+                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-100/70 hover:text-slate-900 transition-colors text-left cursor-pointer group"
+              >
+                <div className="flex items-center gap-2.5">
+                  <Search className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors" />
+                  <span>Consultar / Excluir</span>
+                </div>
+                <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+              </button>
+            </div>
+          </div>
+
+          {/* Section: EXPERIMENTOS CIENTÍFICOS */}
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+              Experimentos Automáticos
+            </span>
+            <div className="space-y-1">
               <button
                 type="button"
                 onClick={() => handleDispararExperimento('padrao')}
-                className={`w-full text-left p-2.5 rounded-lg border transition-all group ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                   viewMode === 'experiments' && experimentMode === 'padrao'
-                    ? 'border-indigo-400 bg-indigo-50/70 shadow-xs'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    ? 'bg-indigo-50 text-indigo-900 font-semibold border border-indigo-200 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-800 group-hover:text-slate-950">
-                    1. Bateria Padrão do Edital
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                <div className="flex items-center gap-2.5">
+                  <Activity className="w-4 h-4 text-indigo-600" />
+                  <span>Bateria Completa (100, 1k, 10k)</span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
-                  N = 100, 1.000 e 10.000 (com trava)
-                </p>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 font-mono font-medium">
+                  Auto
+                </span>
               </button>
 
-              {/* Opção 2: Bateria Rápida */}
               <button
                 type="button"
                 onClick={() => handleDispararExperimento('rapida')}
-                className={`w-full text-left p-2.5 rounded-lg border transition-all group ${
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                   viewMode === 'experiments' && experimentMode === 'rapida'
-                    ? 'border-indigo-400 bg-indigo-50/70 shadow-xs'
-                    : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50'
+                    ? 'bg-indigo-50 text-indigo-900 font-semibold border border-indigo-200 shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-semibold text-slate-800 group-hover:text-slate-950">
-                    2. Bateria Rápida de Validação
-                  </span>
-                  <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
+                <div className="flex items-center gap-2.5">
+                  <Zap className="w-4 h-4 text-amber-500" />
+                  <span>Validação Rápida (N = 100)</span>
                 </div>
-                <p className="text-[11px] text-slate-500 mt-0.5 line-clamp-1">
-                  N = 100 (Instantâneo ~13ms)
-                </p>
+                <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-700 font-mono font-medium">
+                  13ms
+                </span>
               </button>
 
-              {/* Opção 3: Tamanho Personalizado */}
+              {/* Custom N Collapsible */}
               <div
-                className={`rounded-lg border transition-all overflow-hidden ${
+                className={`rounded-xl transition-all overflow-hidden ${
                   viewMode === 'experiments' && experimentMode === 'custom'
-                    ? 'border-indigo-400 bg-indigo-50/40'
-                    : 'border-slate-200 bg-white'
+                    ? 'bg-indigo-50/50 border border-indigo-200'
+                    : ''
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => setShowCustomNInput(!showCustomNInput)}
-                  className="w-full text-left p-2.5 flex items-center justify-between group hover:bg-slate-50/60 transition-colors"
+                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-all text-left cursor-pointer"
                 >
-                  <div>
-                    <span className="text-xs font-semibold text-slate-800 group-hover:text-slate-950">
-                      3. Tamanho Personalizado
-                    </span>
-                    <p className="text-[11px] text-slate-500 mt-0.5">
-                      Definir N livremente
-                    </p>
+                  <div className="flex items-center gap-2.5">
+                    <Sliders className="w-4 h-4 text-slate-400" />
+                    <span>Tamanho Personalizado</span>
                   </div>
                   <ChevronRight
                     className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
@@ -524,22 +424,22 @@ export default function App() {
                 </button>
 
                 {showCustomNInput && (
-                  <div className="p-2.5 pt-0 border-t border-slate-100 flex items-center gap-1.5 mt-1 bg-white">
+                  <div className="px-3 pb-2.5 pt-1 flex items-center gap-1.5">
                     <input
                       type="number"
                       min="1"
                       max="100000"
-                      placeholder="Ex: 500"
+                      placeholder="N livre (ex: 500)"
                       value={experimentCustomN}
                       onChange={(e) => setExperimentCustomN(e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 rounded-md border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600"
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => handleDispararExperimento('custom', experimentCustomN)}
-                      className="text-xs px-3 py-1.5 rounded-md bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shrink-0 shadow-2xs"
+                      className="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shrink-0 shadow-2xs cursor-pointer"
                     >
-                      Executar
+                      Rodar
                     </button>
                   </div>
                 )}
@@ -547,38 +447,49 @@ export default function App() {
             </div>
           </div>
 
-          {/* Canvas Settings */}
-          <div className="border-t border-slate-200 pt-4">
-            <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 block mb-2">
-              Exibição
+          {/* Section: CONFIGURAÇÕES & EXIBIÇÃO */}
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+              Configurações & Exibição
             </span>
-            <label className="flex items-center gap-2 cursor-pointer text-xs text-slate-700">
-              <input
-                type="checkbox"
-                checked={showNil}
-                onChange={(e) => setShowNil(e.target.checked)}
-                className="w-3.5 h-3.5 rounded-sm border-slate-300 text-slate-900 focus:ring-slate-900"
-              />
-              <span>Exibir sentinelas NIL na Rubro-Negra</span>
-            </label>
+            <div className="space-y-1.5 px-1">
+              <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
+                <input
+                  type="checkbox"
+                  checked={showNil}
+                  onChange={(e) => setShowNil(e.target.checked)}
+                  className="w-3.5 h-3.5 rounded-sm border-slate-300 text-slate-900 focus:ring-slate-900"
+                />
+                <span>Sentinelas NIL na Rubro-Negra</span>
+              </label>
+
+              <button
+                type="button"
+                onClick={() => setShowConsoleDrawer(!showConsoleDrawer)}
+                className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-left"
+              >
+                <Terminal className="w-3.5 h-3.5 text-slate-500" />
+                <span>Console de Rotações</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Sidebar Footer */}
-        <div className="border-t border-slate-200 p-3 bg-slate-50/50 flex items-center justify-between text-xs text-slate-500">
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-full bg-slate-200 text-slate-700 flex items-center justify-center font-bold text-[10px]">
+        {/* Sidebar Footer (Profile / Info Card - Alex Morgan RevenuePulseAI style) */}
+        <div className="border-t border-slate-200 p-3 bg-slate-50/50 flex items-center justify-between text-xs">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs shadow-2xs">
               UF
             </div>
             <div className="leading-tight">
-              <p className="font-semibold text-slate-700 text-[11px]">Equipe AED II</p>
-              <p className="text-[10px] text-slate-400">Ciência da Computação</p>
+              <p className="font-semibold text-slate-800 text-xs">Equipe AED II</p>
+              <p className="text-[11px] text-slate-500">Ciência da Computação</p>
             </div>
           </div>
           <button
             onClick={() => setShowGuideModal(true)}
-            title="Abrir Guia Teórico"
-            className="p-1.5 rounded-md hover:bg-slate-200 text-slate-600 transition-colors"
+            title="Guia Teórico das Estruturas"
+            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-600 transition-colors cursor-pointer"
           >
             <HelpCircle className="w-4 h-4" />
           </button>
@@ -587,34 +498,59 @@ export default function App() {
 
       {/* -------------------- MAIN WORKSPACE AREA -------------------- */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Top Header Bar (AWS Explorer & Twinize Style) */}
+        {/* Top Header Bar */}
         <header className="h-14 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0 z-10">
-          {/* View Mode Navigation Tabs */}
-          <div className="flex items-center gap-1">
-            {[
-              { id: 'split', label: 'Lado a Lado' },
-              { id: 'avl', label: 'Foco na AVL' },
-              { id: 'rb', label: 'Foco na Rubro-Negra' },
-              { id: 'traversals', label: 'Caminhamentos & Extremos' },
-              { id: 'experiments', label: 'Experimentos Científicos' }
-            ].map((tab) => (
+          <div className="flex items-center gap-3">
+            {/* Quick Actions (Floating Card Triggers) */}
+            <div className="flex items-center gap-1.5">
               <button
-                key={tab.id}
-                onClick={() => {
-                  setViewMode(tab.id);
-                  setStepTreeAVL(null);
-                  setStepTreeRB(null);
-                  setStepFocusKey(null);
-                }}
-                className={`text-xs px-3 py-1.5 rounded-md transition-all font-medium ${
-                  viewMode === tab.id
-                    ? 'bg-slate-100 text-slate-900 font-semibold shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                }`}
+                type="button"
+                onClick={() => setShowCadastrarModal(true)}
+                className="text-xs px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
               >
-                {tab.label}
+                <Plus className="w-3.5 h-3.5" />
+                <span>Cadastrar Conta</span>
               </button>
-            ))}
+              <button
+                type="button"
+                onClick={() => setShowConsultarModal(true)}
+                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
+              >
+                <Search className="w-3.5 h-3.5 text-slate-500" />
+                <span>Consultar / Excluir</span>
+              </button>
+            </div>
+
+            {/* Subtle Divider */}
+            <div className="h-5 w-px bg-slate-200" />
+
+            {/* View Mode Navigation Tabs */}
+            <div className="flex items-center gap-1">
+              {[
+                { id: 'split', label: 'Lado a Lado' },
+                { id: 'avl', label: 'Foco na AVL' },
+                { id: 'rb', label: 'Foco na Rubro-Negra' },
+                { id: 'traversals', label: 'Caminhamentos & Extremos' },
+                { id: 'experiments', label: 'Experimentos Automáticos' }
+              ].map((tab) => (
+                <button
+                  key={tab.id}
+                  onClick={() => {
+                    setViewMode(tab.id);
+                    setStepTreeAVL(null);
+                    setStepTreeRB(null);
+                    setStepFocusKey(null);
+                  }}
+                  className={`text-xs px-3 py-1.5 rounded-md transition-all font-medium cursor-pointer ${
+                    viewMode === tab.id
+                      ? 'bg-slate-100 text-slate-900 font-semibold shadow-2xs'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                >
+                  {tab.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Right Header Status & Actions */}
@@ -1219,13 +1155,13 @@ export default function App() {
                 </div>
 
                 <div>
-                  <h4 className="font-bold text-slate-900 text-sm mb-1">3. Cenários de Defesa na Apresentação</h4>
+                  <h4 className="font-bold text-slate-900 text-sm mb-1">3. Comportamentos Fundamentais de Balanceamento</h4>
                   <p>
-                    Use os botões na barra lateral para demonstrar diretamente à banca:
+                    Propriedades essenciais avaliadas pelo sistema:
                   </p>
                   <ul className="list-disc pl-5 space-y-1 mt-1 text-slate-600">
-                    <li><b>Pior Caso ABB:</b> Inserção estritamente crescente (1..6) que tornaria uma ABB comum em lista encadeada (O(n)), mas AVL e RB mantêm altura O(log n).</li>
-                    <li><b>Tio Vermelho:</b> Demonstra caso em que apenas recolorações ocorrem, sem custo de rotação de ponteiros.</li>
+                    <li><b>Pior Caso ABB:</b> Inserção estritamente crescente que tornaria uma ABB comum em lista encadeada (O(n)), mas AVL e RB mantêm altura O(log n).</li>
+                    <li><b>Tio Vermelho:</b> Caso em que apenas recolorações ocorrem, sem custo de rotação de ponteiros.</li>
                     <li><b>Rotação Dupla:</b> Caso zigue-zague onde uma rotação simples é insuficiente para restaurar as propriedades.</li>
                     <li><b>Remoção Grau 2:</b> Demonstra a substituição da conta excluída pelo seu sucessor em ordem (menor da subárvore direita).</li>
                   </ul>
@@ -1236,10 +1172,255 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowGuideModal(false)}
-                  className="px-4 py-2 rounded-lg bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800"
+                  className="px-4 py-2 rounded-lg bg-slate-900 text-xs font-semibold text-white hover:bg-slate-800 cursor-pointer"
                 >
                   Entendi
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ================= MODAL: CADASTRAR CONTA (Estilo Add Member / Floating Card) ================= */}
+        {showCadastrarModal && (
+          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+              {/* Modal Header */}
+              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-xs">
+                    <Plus className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">Cadastrar Nova Conta</h3>
+                    <p className="text-xs text-slate-500">Inserção simultânea e balanceada nas duas árvores</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowCadastrarModal(false)}
+                  className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Form */}
+              <form onSubmit={async (e) => {
+                await handleInserir(e);
+                setShowCadastrarModal(false);
+              }} className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Número da Conta <span className="text-rose-500">*</span>
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    placeholder="Ex: 20"
+                    value={numeroConta}
+                    onChange={(e) => setNumeroConta(e.target.value)}
+                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all font-mono"
+                    required
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Nome do Titular <span className="text-slate-400 font-normal">(opcional)</span>
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="Ex: Carlos Silva"
+                    value={titular}
+                    onChange={(e) => setTitular(e.target.value)}
+                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Saldo Inicial (R$)</label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={saldo}
+                      onChange={(e) => setSaldo(e.target.value)}
+                      className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all font-mono"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tipo de Conta</label>
+                    <select
+                      value={tipoConta}
+                      onChange={(e) => setTipoConta(e.target.value)}
+                      className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all"
+                    >
+                      <option value="Corrente">Corrente</option>
+                      <option value="Poupanca">Poupança</option>
+                      <option value="Salario">Salário</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Modal Actions */}
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setShowCadastrarModal(false)}
+                    className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl transition-colors flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{loading ? 'Cadastrando...' : 'Cadastrar Conta'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* ================= MODAL: CONSULTAR / EXCLUIR CONTA ================= */}
+        {showConsultarModal && (
+          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
+              {/* Modal Header */}
+              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center font-bold shadow-xs">
+                    <Search className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-slate-900">Consultar ou Encerrar Conta</h3>
+                    <p className="text-xs text-slate-500">Busca e encerramento com balanceamento automático</p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowConsultarModal(false);
+                    setSearchResult(null);
+                  }}
+                  className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              {/* Modal Body */}
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                    Número da Conta <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Digite o número da conta..."
+                      value={chaveOperacao}
+                      onChange={(e) => setChaveOperacao(e.target.value)}
+                      className="flex-1 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all font-mono"
+                      autoFocus
+                    />
+                    <button
+                      type="button"
+                      onClick={handleBuscar}
+                      disabled={loading || !chaveOperacao}
+                      className="px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 shrink-0"
+                    >
+                      <Search className="w-3.5 h-3.5" />
+                      <span>Localizar</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Search Result Card if Found */}
+                {searchResult && (
+                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3 animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-sm text-slate-900">
+                        Conta #{searchResult.numero_conta}
+                      </span>
+                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
+                        Ativa
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
+                      <div>
+                        <p className="text-[10px] uppercase text-slate-400 font-medium">Titular</p>
+                        <p className="font-semibold text-slate-800">{searchResult.titular}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase text-slate-400 font-medium">Saldo</p>
+                        <p className="font-mono font-semibold text-slate-800">R$ {searchResult.saldo.toFixed(2)}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase text-slate-400 font-medium">Tipo</p>
+                        <p className="font-medium text-slate-800">{searchResult.tipo}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase text-slate-400 font-medium">Agência</p>
+                        <p className="font-mono font-medium text-slate-800">{searchResult.agencia}</p>
+                      </div>
+                    </div>
+
+                    <div className="pt-2 border-t border-slate-200 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={async (e) => {
+                          await handleRemover(e);
+                          setShowConsultarModal(false);
+                        }}
+                        disabled={loading}
+                        className="px-3.5 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                        <span>Encerrar Esta Conta</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Direct remove button if no search done yet */}
+                {!searchResult && chaveOperacao && (
+                  <div className="pt-2 flex justify-end">
+                    <button
+                      type="button"
+                      onClick={async (e) => {
+                        await handleRemover(e);
+                        setShowConsultarModal(false);
+                      }}
+                      disabled={loading}
+                      className="px-3.5 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Encerrar Conta #{chaveOperacao}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Modal Close Footer */}
+                <div className="flex justify-end pt-2 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowConsultarModal(false);
+                      setSearchResult(null);
+                    }}
+                    className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Fechar
+                  </button>
+                </div>
               </div>
             </div>
           </div>

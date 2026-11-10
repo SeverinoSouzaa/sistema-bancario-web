@@ -148,7 +148,7 @@ export default function BinaryTreeVisualizer({
         </div>
         <p className="text-sm font-semibold text-slate-700">Árvore vazia no momento</p>
         <p className="text-xs text-slate-500 mt-1 max-w-sm text-center">
-          Cadastre uma nova conta no painel lateral ou carregue um dos cenários pré-configurados da banca.
+          Cadastre uma nova conta no menu superior ou execute uma bateria automática de testes.
         </p>
       </div>
     );
