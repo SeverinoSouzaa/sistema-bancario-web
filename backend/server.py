@@ -123,6 +123,175 @@ def gerar_arvore_avl_desbalanceada(raiz_original: Any, conta: Any) -> Any:
     return _ins(raiz_copia)
 
 
+def simular_passos_completos_avl(avl_store: Any, conta: Any) -> Dict[str, Any]:
+    """
+    Simula com precisão cirúrgica a inserção AVL passo a passo para capturar:
+    - antes: árvore original antes da operação
+    - desbalanceada: árvore com o nó inserido via BST pura (com alturas/FB atualizados), revelando o ponto crítico
+    - passo1: no caso de rotação dupla (LR ou RL), o estado intermediário após a rotação simples no filho (alinhamento em LL/RR)
+    - final: árvore resultante após rotação final e rebalanceamento
+    - caso: "CASO LL", "CASO RR", "CASO LR", "CASO RL" ou None
+    - no_desbalanceado, fb_detectado, filho, no_promovido
+    """
+    criar_no_avl: Any = NoAVL
+    if avl_store.raiz is None:
+        novo = criar_no_avl(cast(Any, conta))
+        snap = serializar_no_avl(novo)
+        return {
+            "antes": None,
+            "desbalanceada": snap,
+            "passo1": None,
+            "final": snap,
+            "caso": None,
+            "no_desbalanceado": None,
+            "fb_detectado": None,
+            "filho": None,
+            "no_promovido": None
+        }
+
+    def _recalcular_alturas(no: Any) -> int:
+        if no is None:
+            return -1
+        _recalcular_alturas(no.esquerda)
+        _recalcular_alturas(no.direita)
+        no.atualizar_altura()
+        return no.altura
+
+    # 1. Inserção BST tradicional pura (sem rotações) para registrar a violação exata
+    def _ins_bst(no: Any) -> Any:
+        if no is None:
+            return criar_no_avl(cast(Any, conta))
+        if conta.numero_conta < no.chave:
+            no.esquerda = _ins_bst(no.esquerda)
+        elif conta.numero_conta > no.chave:
+            no.direita = _ins_bst(no.direita)
+        no.atualizar_altura()
+        return no
+
+    raiz_copia_desb = copy.deepcopy(avl_store.raiz)
+    raiz_desb_obj = _ins_bst(raiz_copia_desb)
+    _recalcular_alturas(raiz_desb_obj)
+    desbalanceada_snap = serializar_no_avl(raiz_desb_obj)
+
+    # 2. Simulação passo a passo capturando passo1 para rotações duplas (LR e RL)
+    raiz_passo1_snap: Optional[Dict[str, Any]] = None
+    caso_detectado: Optional[str] = None
+    no_desb: Optional[int] = None
+    fb_desb: Optional[int] = None
+    no_prom: Optional[int] = None
+    filho_info: Optional[Dict[str, Any]] = None
+
+    tree_container = {"root": copy.deepcopy(raiz_desb_obj)}
+
+    def _sim_rec(no: Any) -> Any:
+        nonlocal raiz_passo1_snap, caso_detectado, no_desb, fb_desb, no_prom, filho_info
+        if no is None:
+            return None
+        if conta.numero_conta < no.chave:
+            no.esquerda = _sim_rec(no.esquerda)
+        elif conta.numero_conta > no.chave:
+            no.direita = _sim_rec(no.direita)
+
+        no.atualizar_altura()
+        fb = no.fator_balanceamento
+
+        if fb > 1:
+            no_desb = no.chave
+            fb_desb = fb
+            if no.esquerda is not None and no.esquerda.fator_balanceamento >= 0:
+                caso_detectado = "CASO LL"
+                k2 = no
+                k1 = k2.esquerda
+                no_prom = k1.chave
+                k2.esquerda = k1.direita
+                k1.direita = k2
+                k2.atualizar_altura()
+                k1.atualizar_altura()
+                return k1
+            else:
+                caso_detectado = "CASO LR"
+                k3 = no
+                k1 = k3.esquerda
+                k2 = k1.direita
+                no_prom = k2.chave
+                filho_info = {"lado": "Esquerdo", "chave": k1.chave, "fb": k1.fator_balanceamento}
+
+                # Passo 1 da rotação dupla: rotação simples à esquerda no filho k1
+                k1.direita = k2.esquerda
+                k2.esquerda = k1
+                k1.atualizar_altura()
+                k2.atualizar_altura()
+                k3.esquerda = k2
+                k3.atualizar_altura()
+
+                # Captura estado intermediário alinhado em LL
+                _recalcular_alturas(tree_container["root"])
+                raiz_passo1_snap = serializar_no_avl(tree_container["root"])
+
+                # Passo 2 da rotação dupla: rotação simples à direita no ancestral k3
+                k3.esquerda = k2.direita
+                k2.direita = k3
+                k3.atualizar_altura()
+                k2.atualizar_altura()
+                return k2
+        elif fb < -1:
+            no_desb = no.chave
+            fb_desb = fb
+            if no.direita is not None and no.direita.fator_balanceamento <= 0:
+                caso_detectado = "CASO RR"
+                k1 = no
+                k2 = k1.direita
+                no_prom = k2.chave
+                k1.direita = k2.esquerda
+                k2.esquerda = k1
+                k1.atualizar_altura()
+                k2.atualizar_altura()
+                return k2
+            else:
+                caso_detectado = "CASO RL"
+                k1 = no
+                k3 = k1.direita
+                k2 = k3.esquerda
+                no_prom = k2.chave
+                filho_info = {"lado": "Direito", "chave": k3.chave, "fb": k3.fator_balanceamento}
+
+                # Passo 1 da rotação dupla: rotação simples à direita no filho k3
+                k3.esquerda = k2.direita
+                k2.direita = k3
+                k3.atualizar_altura()
+                k2.atualizar_altura()
+                k1.direita = k2
+                k1.atualizar_altura()
+
+                # Captura estado intermediário alinhado em RR
+                _recalcular_alturas(tree_container["root"])
+                raiz_passo1_snap = serializar_no_avl(tree_container["root"])
+
+                # Passo 2 da rotação dupla: rotação simples à esquerda no ancestral k1
+                k1.direita = k2.esquerda
+                k2.esquerda = k1
+                k1.atualizar_altura()
+                k2.atualizar_altura()
+                return k2
+        return no
+
+    tree_container["root"] = _sim_rec(tree_container["root"])
+    _recalcular_alturas(tree_container["root"])
+    final_snap = serializar_no_avl(tree_container["root"])
+
+    return {
+        "antes": serializar_no_avl(avl_store.raiz),
+        "desbalanceada": desbalanceada_snap,
+        "passo1": raiz_passo1_snap,
+        "final": final_snap,
+        "caso": caso_detectado,
+        "no_desbalanceado": no_desb,
+        "fb_detectado": fb_desb,
+        "filho": filho_info,
+        "no_promovido": no_prom
+    }
+
+
 def gerar_arvore_rb_sem_fixup(rb_store: Any, conta: Any) -> Any:
     passos = simular_passos_completos_rb(rb_store, conta)
     if passos and passos[0].get("arvore"):
@@ -560,51 +729,166 @@ def extrair_diagnostico_rebalanceamento(
         m_rot = re.search(r"Tipo de Rotacao:\s*([^\n]+)", texto_avl)
         if m_rot:
             avl_diag["tipo_rotacao"] = m_rot.group(1).strip()
+        elif "CASO LR" in avl_diag["caso"]:
+            avl_diag["tipo_rotacao"] = "Rotação Dupla Esquerda-Direita (LR)"
+        elif "CASO RL" in avl_diag["caso"]:
+            avl_diag["tipo_rotacao"] = "Rotação Dupla Direita-Esquerda (RL)"
 
         m_prom = re.search(r"Nova raiz local promovida:\s*No \((\d+)\)", texto_avl)
         if m_prom:
             avl_diag["no_promovido"] = int(m_prom.group(1))
+        else:
+            m_prom_double = re.search(r"Promove No \((\d+)\)", texto_avl)
+            if m_prom_double:
+                avl_diag["no_promovido"] = int(m_prom_double.group(1))
+
+        # Informações detalhadas do filho crítico
+        m_filho = re.search(r"\*\s*Filho\s+(Esquerdo|Direito)\s+\((\d+)\)\s+com\s+FB=([+-]?\d+)", texto_avl)
+        filho_lado = m_filho.group(1) if m_filho else None
+        filho_chave = int(m_filho.group(2)) if m_filho else None
+        filho_fb = m_filho.group(3) if m_filho else None
+        if filho_chave is not None:
+            avl_diag["filho"] = {
+                "lado": filho_lado,
+                "chave": filho_chave,
+                "fb": filho_fb
+            }
+
+        # Fallbacks dos snapshots simulados se necessários
+        if avl_diag["no_desbalanceado"] is None and snapshots_avl and snapshots_avl.get("no_desbalanceado"):
+            avl_diag["no_desbalanceado"] = snapshots_avl["no_desbalanceado"]
+            avl_diag["fb_detectado"] = str(snapshots_avl.get("fb_detectado") or "+2")
+        if avl_diag["no_promovido"] is None and snapshots_avl and snapshots_avl.get("no_promovido"):
+            avl_diag["no_promovido"] = snapshots_avl["no_promovido"]
+        if avl_diag["filho"] is None and snapshots_avl and snapshots_avl.get("filho"):
+            avl_diag["filho"] = snapshots_avl["filho"]
+            if not filho_chave and avl_diag["filho"]:
+                filho_chave = avl_diag["filho"].get("chave")
+                filho_lado = avl_diag["filho"].get("lado")
+                filho_fb = avl_diag["filho"].get("fb")
 
         passos_avl: List[Dict[str, Any]] = []
-        # Passo 1: Estado Inicial
-        passos_avl.append({
-            "ordem": 1,
-            "titulo": "1. Árvore Inicial",
-            "descricao": f"Estrutura da AVL estável antes da inserção da Conta #{chave}.",
-            "arvore": snapshots_avl.get("antes") if snapshots_avl else None,
-            "no_foco": None,
-            "status": "info"
-        })
+        is_dupla = "CASO LR" in avl_diag["caso"] or "CASO RL" in avl_diag["caso"]
 
-        # Passo 2: Inserção do Nó e Desbalanceamento
-        passos_avl.append({
-            "ordem": 2,
-            "titulo": "2. Inserção & Desbalanceamento",
-            "descricao": f"Ao inserir a Conta #{chave}, o nó ancestral ({avl_diag['no_desbalanceado']}) atingiu FB={avl_diag['fb_detectado']} (|FB| ≥ 2). Configura-se o {avl_diag['caso']}, necessitando de {avl_diag['tipo_rotacao']}.",
-            "arvore": snapshots_avl.get("desbalanceada") if snapshots_avl else None,
-            "no_foco": avl_diag["no_desbalanceado"],
-            "status": "warning"
-        })
+        if is_dupla:
+            # 5 Passos Didáticos para Rotação Dupla (LR / RL)
+            # Passo 1: Estado Inicial
+            passos_avl.append({
+                "ordem": 1,
+                "titulo": "1. Árvore Inicial",
+                "descricao": f"Estrutura da AVL estável antes da inserção da Conta #{chave}.",
+                "arvore": snapshots_avl.get("antes") if snapshots_avl else None,
+                "no_foco": None,
+                "status": "info"
+            })
 
-        # Passo 3: Rotação Aplicada
-        passos_avl.append({
-            "ordem": 3,
-            "titulo": "3. Rebalanceamento por Rotação",
-            "descricao": f"{avl_diag['tipo_rotacao']} executada. O nó ({avl_diag['no_promovido']}) assume a posição de nova raiz local, reduzindo a altura e equilibrando as subárvores.",
-            "arvore": snapshots_avl.get("final") if snapshots_avl else None,
-            "no_foco": avl_diag["no_promovido"],
-            "status": "success"
-        })
+            # Passo 2: Inserção do Nó & Desbalanceamento Crítico
+            lado_str = f"filho {filho_lado.lower()} #{filho_chave}" if (filho_lado and filho_chave) else "filho"
+            fb_filho_str = f" com FB={filho_fb}" if filho_fb else ""
+            desc_p2 = (
+                f"Ao inserir a Conta #{chave}, o nó ancestral #{avl_diag['no_desbalanceado']} atingiu "
+                f"FB={avl_diag['fb_detectado']} (|FB| ≥ 2) e seu {lado_str}{fb_filho_str} possui sinal oposto, "
+                f"formando o zigue-zague característico do {avl_diag['caso']}. Necessita de rotação dupla em duas etapas."
+            )
+            passos_avl.append({
+                "ordem": 2,
+                "titulo": "2. Inserção & Desbalanceamento",
+                "descricao": desc_p2,
+                "arvore": snapshots_avl.get("desbalanceada") if snapshots_avl else None,
+                "no_foco": avl_diag["no_desbalanceado"],
+                "status": "warning"
+            })
 
-        # Passo 4: Árvore Resultante
-        passos_avl.append({
-            "ordem": 4,
-            "titulo": "4. Árvore Resultante Equilibrada",
-            "descricao": "Recálculo de alturas concluído. Todos os nós da árvore satisfazem rigorosamente a condição AVL (|FB| ≤ 1).",
-            "arvore": snapshots_avl.get("final") if snapshots_avl else None,
-            "no_foco": None,
-            "status": "success"
-        })
+            # Passo 3: Rotação no Filho (Alinhamento em Linha Reta)
+            if "CASO LR" in avl_diag["caso"]:
+                desc_p3 = (
+                    f"Passo 1 da Rotação Dupla: Rotação simples à esquerda no filho #{filho_chave}. "
+                    f"A subárvore é alinhada da configuração zigue-zague (LR) para uma linha reta contínua (Caso LL), "
+                    f"posicionando o nó #{avl_diag['no_promovido']} como filho esquerdo de #{avl_diag['no_desbalanceado']}."
+                )
+            else:
+                desc_p3 = (
+                    f"Passo 1 da Rotação Dupla: Rotação simples à direita no filho #{filho_chave}. "
+                    f"A subárvore é alinhada da configuração zigue-zague (RL) para uma linha reta contínua (Caso RR), "
+                    f"posicionando o nó #{avl_diag['no_promovido']} como filho direito de #{avl_diag['no_desbalanceado']}."
+                )
+            arv_p3 = snapshots_avl.get("passo1") if (snapshots_avl and snapshots_avl.get("passo1")) else (snapshots_avl.get("final") if snapshots_avl else None)
+            passos_avl.append({
+                "ordem": 3,
+                "titulo": "3. Rotação no Filho (Alinhamento)",
+                "descricao": desc_p3,
+                "arvore": arv_p3,
+                "no_foco": avl_diag["no_promovido"] or filho_chave,
+                "status": "warning"
+            })
+
+            # Passo 4: Rotação no Ancestral (Balanceamento Definitivo)
+            if "CASO LR" in avl_diag["caso"]:
+                desc_p4 = (
+                    f"Passo 2 da Rotação Dupla: Rotação simples à direita no nó ancestral #{avl_diag['no_desbalanceado']}. "
+                    f"O nó #{avl_diag['no_promovido']} assume definitivamente a raiz local, equilibrando ambas as subárvores e reduzindo a altura."
+                )
+            else:
+                desc_p4 = (
+                    f"Passo 2 da Rotação Dupla: Rotação simples à esquerda no nó ancestral #{avl_diag['no_desbalanceado']}. "
+                    f"O nó #{avl_diag['no_promovido']} assume definitivamente a raiz local, equilibrando ambas as subárvores e reduzindo a altura."
+                )
+            passos_avl.append({
+                "ordem": 4,
+                "titulo": "4. Rotação no Ancestral (Balanceamento)",
+                "descricao": desc_p4,
+                "arvore": snapshots_avl.get("final") if snapshots_avl else None,
+                "no_foco": avl_diag["no_promovido"],
+                "status": "success"
+            })
+
+            # Passo 5: Árvore Resultante Equilibrada
+            passos_avl.append({
+                "ordem": 5,
+                "titulo": "5. Árvore Resultante Equilibrada",
+                "descricao": "Recálculo de alturas concluído com sucesso. Todos os nós da árvore satisfazem rigorosamente a invariante AVL (|FB| ≤ 1).",
+                "arvore": snapshots_avl.get("final") if snapshots_avl else None,
+                "no_foco": None,
+                "status": "success"
+            })
+        else:
+            # 4 Passos para Rotação Simples (LL / RR)
+            passos_avl.append({
+                "ordem": 1,
+                "titulo": "1. Árvore Inicial",
+                "descricao": f"Estrutura da AVL estável antes da inserção da Conta #{chave}.",
+                "arvore": snapshots_avl.get("antes") if snapshots_avl else None,
+                "no_foco": None,
+                "status": "info"
+            })
+
+            passos_avl.append({
+                "ordem": 2,
+                "titulo": "2. Inserção & Desbalanceamento",
+                "descricao": f"Ao inserir a Conta #{chave}, o nó ancestral #{avl_diag['no_desbalanceado']} atingiu FB={avl_diag['fb_detectado']} (|FB| ≥ 2). Configura-se o {avl_diag['caso']}, necessitando de {avl_diag['tipo_rotacao']}.",
+                "arvore": snapshots_avl.get("desbalanceada") if snapshots_avl else None,
+                "no_foco": avl_diag["no_desbalanceado"],
+                "status": "warning"
+            })
+
+            passos_avl.append({
+                "ordem": 3,
+                "titulo": "3. Rebalanceamento por Rotação",
+                "descricao": f"{avl_diag['tipo_rotacao']} executada. O nó #{avl_diag['no_promovido']} assume a posição de nova raiz local, reduzindo a altura e equilibrando as subárvores.",
+                "arvore": snapshots_avl.get("final") if snapshots_avl else None,
+                "no_foco": avl_diag["no_promovido"],
+                "status": "success"
+            })
+
+            passos_avl.append({
+                "ordem": 4,
+                "titulo": "4. Árvore Resultante Equilibrada",
+                "descricao": "Recálculo de alturas concluído. Todos os nós da árvore satisfazem rigorosamente a condição AVL (|FB| ≤ 1).",
+                "arvore": snapshots_avl.get("final") if snapshots_avl else None,
+                "no_foco": None,
+                "status": "success"
+            })
+
         avl_diag["passos"] = passos_avl
 
     elif "[REMOCAO AVL" in texto_avl:
@@ -1028,8 +1312,8 @@ def rota_inserir_conta(req: InserirContaRequest):
     raiz_antes_avl = serializar_no_avl(store.avl.raiz)
     raiz_antes_rb = serializar_no_rb(store.rb.raiz, store.rb.NIL)
 
-    # Gera estados intermediários (nó inserido antes da rotação/fixup)
-    raiz_unrotated_avl = serializar_no_avl(gerar_arvore_avl_desbalanceada(store.avl.raiz, conta))
+    # Simulações de passos detalhados para AVL e Rubro-Negra
+    passos_simulados_avl = simular_passos_completos_avl(store.avl, conta)
     passos_simulados_rb = simular_passos_completos_rb(store.rb, conta)
     raiz_unfixed_rb = passos_simulados_rb[0]["arvore"] if passos_simulados_rb else None
 
@@ -1049,8 +1333,13 @@ def rota_inserir_conta(req: InserirContaRequest):
 
     snapshots_avl = {
         "antes": raiz_antes_avl,
-        "desbalanceada": raiz_unrotated_avl,
-        "final": raiz_final_avl
+        "desbalanceada": passos_simulados_avl.get("desbalanceada"),
+        "passo1": passos_simulados_avl.get("passo1"),
+        "final": raiz_final_avl,
+        "no_desbalanceado": passos_simulados_avl.get("no_desbalanceado"),
+        "fb_detectado": passos_simulados_avl.get("fb_detectado"),
+        "filho": passos_simulados_avl.get("filho"),
+        "no_promovido": passos_simulados_avl.get("no_promovido")
     }
     snapshots_rb = {
         "antes": raiz_antes_rb,
@@ -1473,7 +1762,7 @@ def rota_aplicar_preset(nome_preset: str):
 
     raiz_antes_avl = serializar_no_avl(store.avl.raiz)
     raiz_antes_rb = serializar_no_rb(store.rb.raiz, store.rb.NIL)
-    raiz_unrotated_avl = serializar_no_avl(gerar_arvore_avl_desbalanceada(store.avl.raiz, ult_conta))
+    passos_simulados_avl = simular_passos_completos_avl(store.avl, ult_conta)
     passos_simulados_rb = simular_passos_completos_rb(store.rb, ult_conta)
 
     store.avl.inserir(cast(Any, ult_conta))
@@ -1485,8 +1774,13 @@ def rota_aplicar_preset(nome_preset: str):
 
     snapshots_avl = {
         "antes": raiz_antes_avl,
-        "desbalanceada": raiz_unrotated_avl,
-        "final": raiz_final_avl
+        "desbalanceada": passos_simulados_avl.get("desbalanceada"),
+        "passo1": passos_simulados_avl.get("passo1"),
+        "final": raiz_final_avl,
+        "no_desbalanceado": passos_simulados_avl.get("no_desbalanceado"),
+        "fb_detectado": passos_simulados_avl.get("fb_detectado"),
+        "filho": passos_simulados_avl.get("filho"),
+        "no_promovido": passos_simulados_avl.get("no_promovido")
     }
     snapshots_rb = {
         "antes": raiz_antes_rb,

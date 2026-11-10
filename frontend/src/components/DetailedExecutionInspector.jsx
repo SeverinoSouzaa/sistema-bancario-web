@@ -161,6 +161,14 @@ export default function DetailedExecutionInspector({
                   </b>
                 </div>
               )}
+              {diag.filho && (
+                <div className="flex justify-between">
+                  <span>Filho ({diag.filho.lado || 'Direto'}):</span>
+                  <b className="font-mono text-amber-800">
+                    Nó #{diag.filho.chave} (FB = {diag.filho.fb})
+                  </b>
+                </div>
+              )}
               <div className="flex justify-between">
                 <span>Ação Aplicada:</span>
                 <span className="font-medium text-slate-800 text-right">{diag.tipo_rotacao}</span>
