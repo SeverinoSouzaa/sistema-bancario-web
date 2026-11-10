@@ -1126,6 +1126,7 @@ export default function App() {
                       showNil={showNil}
                       highlightKey={highlightKey}
                       onSelectNode={(node) => setSelectedNode({ ...node, treeType: 'Rubro-Negra' })}
+                      controlsPosition="right"
                     />
                   </div>
                 </div>

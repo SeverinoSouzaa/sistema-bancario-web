@@ -6,7 +6,8 @@ export default function BinaryTreeVisualizer({
   type = 'avl', // 'avl' or 'rb'
   showNil = true,
   highlightKey = null,
-  onSelectNode = null
+  onSelectNode = null,
+  controlsPosition = 'left' // 'left' or 'right'
 }) {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
@@ -164,7 +165,11 @@ export default function BinaryTreeVisualizer({
       style={{ cursor: isDragging ? 'grabbing' : 'grab' }}
     >
       {/* Floating Canvas Controls (Helicon style: Zoom In, Zoom Out, Reset) */}
-      <div className="absolute bottom-4 left-4 z-20 flex items-center bg-white/95 backdrop-blur-xs border border-slate-200 rounded-lg shadow-sm p-1 gap-1 text-slate-700">
+      <div
+        className={`absolute bottom-4 ${
+          controlsPosition === 'right' ? 'right-4' : 'left-4'
+        } z-20 flex items-center bg-white/95 backdrop-blur-xs border border-slate-200 rounded-lg shadow-sm p-1 gap-1 text-slate-700`}
+      >
         <button
           onClick={handleZoomIn}
           title="Aumentar Zoom"
