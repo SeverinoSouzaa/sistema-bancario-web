@@ -265,6 +265,9 @@ export default function App() {
       setHighlightKey(null);
       setSearchResult(null);
       setSelectedNode(null);
+      setStepTreeAVL(null);
+      setStepTreeRB(null);
+      setStepFocusKey(null);
       notify('Ambas as árvores foram resetadas com sucesso.', 'success');
     } catch (err) {
       notify(err.message, 'error');

@@ -51,15 +51,42 @@ export default function DetailedExecutionInspector({
     }
   };
 
-  if (!diag) {
+  if (!diag || !op || op?.tipo === 'INICIAL' || op?.chave === 0) {
     return (
-      <div className="h-full flex flex-col items-center justify-center p-6 text-center text-slate-400 bg-white border-l border-slate-200">
-        <Info className="w-8 h-8 mb-2 text-slate-300" />
-        <p className="text-xs font-semibold text-slate-600">Nenhuma operação analisada</p>
-        <p className="text-[11px] text-slate-400 mt-1 max-w-xs">
-          Realize uma inserção ou encerramento de conta para inspecionar os passos de balanceamento.
-        </p>
-      </div>
+      <aside className="w-96 border-l border-slate-200 bg-white flex flex-col h-full shrink-0 select-none overflow-hidden shadow-xs z-10">
+        {/* Header */}
+        <div className="h-14 border-b border-slate-200 px-4 flex items-center justify-between bg-slate-50/70">
+          <div className="flex items-center gap-2.5">
+            <div className="w-7 h-7 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+              {treeType === 'avl' ? 'AVL' : 'RN'}
+            </div>
+            <div>
+              <h2 className="text-xs font-bold text-slate-900 leading-tight">
+                {treeType === 'avl' ? 'Inspetor de Rebalanceamento' : 'Inspetor de Casos & Cores'}
+              </h2>
+              <p className="text-[10px] text-slate-500 font-medium">
+                Passo a Passo Interativo
+              </p>
+            </div>
+          </div>
+          <span className="text-[10px] px-2 py-0.5 rounded-full font-semibold border bg-slate-100 text-slate-600 border-slate-200">
+            Aguardando
+          </span>
+        </div>
+
+        {/* Empty state message */}
+        <div className="flex-1 flex flex-col items-center justify-center p-6 text-center text-slate-400 bg-white space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200 text-slate-400 flex items-center justify-center shadow-2xs">
+            <Info className="w-6 h-6 text-slate-400" />
+          </div>
+          <div>
+            <p className="text-xs font-semibold text-slate-700">Nenhuma operação analisada</p>
+            <p className="text-[11px] text-slate-400 mt-1 max-w-xs leading-relaxed">
+              Cadastre ou encerre uma conta bancária no menu lateral para inspecionar cada passo da árvore balanceada.
+            </p>
+          </div>
+        </div>
+      </aside>
     );
   }
 
@@ -114,7 +141,9 @@ export default function DetailedExecutionInspector({
                 ? `Inserção da Conta #${op.chave}`
                 : op?.tipo === 'REMOCAO'
                 ? `Encerramento da Conta #${op.chave}`
-                : 'Cenário Pré-definido'}
+                : op?.tipo === 'PRESET'
+                ? 'Cenário Pré-definido'
+                : `Operação #${op?.chave || ''}`}
             </span>
             <span className="text-[11px] font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">
               {diag.caso}

@@ -1008,6 +1008,13 @@ def rota_obter_estado():
 
 @app.post("/api/inserir")
 def rota_inserir_conta(req: InserirContaRequest):
+    # 1. Validação prévia de duplicidade: rejeita imediatamente sem alterar estados ou diagnósticos
+    if store.avl.buscar(req.numero_conta) is not None or store.rb.buscar(req.numero_conta) is not None:
+        raise HTTPException(
+            status_code=400,
+            detail=f"A Conta #{req.numero_conta} já existe no cadastro bancário. Não são permitidas contas com numeração duplicada."
+        )
+
     nome_titular = req.titular.strip() if req.titular and req.titular.strip() else f"Conta {req.numero_conta}"
     conta: Any = ContaBancaria(
         numero_conta=req.numero_conta,
@@ -1028,6 +1035,12 @@ def rota_inserir_conta(req: InserirContaRequest):
 
     sucesso_avl: bool = bool(store.avl.inserir(cast(Any, conta)))
     sucesso_rb: bool = bool(store.rb.inserir(cast(Any, conta)))
+
+    if not sucesso_avl and not sucesso_rb:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Não foi possível inserir a Conta #{req.numero_conta}."
+        )
 
     raiz_final_avl = serializar_no_avl(store.avl.raiz)
     raiz_final_rb = serializar_no_rb(store.rb.raiz, store.rb.NIL)
@@ -1056,17 +1069,11 @@ def rota_inserir_conta(req: InserirContaRequest):
     )
     store.ultimo_diagnostico = diag
 
-    if not sucesso_avl and not sucesso_rb:
-        raise HTTPException(
-            status_code=400,
-            detail=f"Conta {req.numero_conta} já existe no sistema. Operação rejeitada conforme Seção 8 do Edital."
-        )
-
     registro_op = {
         "tipo": "INSERCAO",
         "chave": req.numero_conta,
         "titular": nome_titular,
-        "detalhes": f"Conta {req.numero_conta} cadastrada com sucesso.",
+        "detalhes": f"Conta #{req.numero_conta} cadastrada com sucesso.",
         "logs": novos_logs,
         "diagnostico": diag
     }
@@ -1074,7 +1081,7 @@ def rota_inserir_conta(req: InserirContaRequest):
 
     return {
         "sucesso": True,
-        "mensagem": f"Conta {req.numero_conta} inserida com sucesso em ambas as árvores.",
+        "mensagem": f"Conta #{req.numero_conta} inserida com sucesso em ambas as árvores.",
         "logs": novos_logs,
         "diagnostico": diag,
         "dados": obter_estado_completo()
@@ -1083,6 +1090,17 @@ def rota_inserir_conta(req: InserirContaRequest):
 
 @app.post("/api/remover")
 def rota_remover_conta(req: OperacaoChaveRequest):
+    # 1. Validação prévia de existência: rejeita imediatamente se a conta não existir
+    conta_avl = store.avl.buscar(req.numero_conta)
+    conta_rb = store.rb.buscar(req.numero_conta)
+
+    if conta_avl is None and conta_rb is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"A Conta #{req.numero_conta} não consta no cadastro bancário para encerramento."
+        )
+
+    # 2. Captura snapshots estruturais antes da alteração
     raiz_antes_avl = serializar_no_avl(store.avl.raiz)
     raiz_antes_rb = serializar_no_rb(store.rb.raiz, store.rb.NIL)
 
@@ -1116,18 +1134,12 @@ def rota_remover_conta(req: OperacaoChaveRequest):
     )
     store.ultimo_diagnostico = diag
 
-    if rem_avl is None and rem_rb is None:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Conta {req.numero_conta} não encontrada para encerramento."
-        )
-
     titular = rem_avl.titular if rem_avl else (rem_rb.titular if rem_rb else "Desconhecido")
     registro_op = {
         "tipo": "REMOCAO",
         "chave": req.numero_conta,
         "titular": titular,
-        "detalhes": f"Conta {req.numero_conta} removida com sucesso.",
+        "detalhes": f"Conta #{req.numero_conta} removida com sucesso.",
         "logs": novos_logs,
         "diagnostico": diag
     }
@@ -1135,7 +1147,7 @@ def rota_remover_conta(req: OperacaoChaveRequest):
 
     return {
         "sucesso": True,
-        "mensagem": f"Conta {req.numero_conta} ({titular}) encerrada com sucesso.",
+        "mensagem": f"Conta #{req.numero_conta} ({titular}) encerrada com sucesso.",
         "logs": novos_logs,
         "diagnostico": diag,
         "dados": obter_estado_completo()
