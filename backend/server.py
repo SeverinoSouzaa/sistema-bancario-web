@@ -1154,13 +1154,192 @@ def rota_remover_conta(req: OperacaoChaveRequest):
     }
 
 
+def rastrear_busca_avl(avl: ArvoreAVL, numero_conta: int) -> Dict[str, Any]:
+    caminho: List[Dict[str, Any]] = []
+    atual = avl.raiz
+    passo = 1
+    encontrado = False
+    conta_encontrada: Optional[ContaBancaria] = None
+
+    nos_antes = avl.estatisticas.nos_visitados
+    comp_antes = avl.estatisticas.comparacoes
+
+    while atual is not None:
+        avl.estatisticas.comparacoes += 1
+        avl.estatisticas.nos_visitados += 1
+
+        fb = atual.fator_balanceamento
+        alt = atual.altura
+        chave_atual = atual.chave
+        titular_atual = atual.conta.titular if atual.conta else f"Conta {chave_atual}"
+        saldo_atual = float(atual.conta.saldo) if atual.conta else 0.0
+
+        if numero_conta == chave_atual:
+            encontrado = True
+            conta_encontrada = atual.conta
+            caminho.append({
+                "passo": passo,
+                "chave": chave_atual,
+                "titular": titular_atual,
+                "saldo": saldo_atual,
+                "fb": fb,
+                "altura_subarvore": alt,
+                "direcao": "LOCALIZADO",
+                "comparacao": f"Chave #{numero_conta} == #{chave_atual} (Registro localizado com sucesso)",
+                "status": "sucesso"
+            })
+            break
+        elif numero_conta < chave_atual:
+            caminho.append({
+                "passo": passo,
+                "chave": chave_atual,
+                "titular": titular_atual,
+                "saldo": saldo_atual,
+                "fb": fb,
+                "altura_subarvore": alt,
+                "direcao": "ESQUERDA",
+                "comparacao": f"Chave #{numero_conta} < #{chave_atual} → Descer para Subárvore Esquerda",
+                "status": "descendo"
+            })
+            atual = atual.esquerda
+        else:
+            caminho.append({
+                "passo": passo,
+                "chave": chave_atual,
+                "titular": titular_atual,
+                "saldo": saldo_atual,
+                "fb": fb,
+                "altura_subarvore": alt,
+                "direcao": "DIREITA",
+                "comparacao": f"Chave #{numero_conta} > #{chave_atual} → Descer para Subárvore Direita",
+                "status": "descendo"
+            })
+            atual = atual.direita
+        passo += 1
+
+    if not encontrado:
+        caminho.append({
+            "passo": passo,
+            "chave": "NULL",
+            "titular": "Ponteiro Nulo",
+            "saldo": 0.0,
+            "fb": 0,
+            "altura_subarvore": 0,
+            "direcao": "FIM",
+            "comparacao": f"Ponteiro nulo atingido → Chave #{numero_conta} inexiste na Árvore AVL",
+            "status": "inexistente"
+        })
+
+    custo_nos = avl.estatisticas.nos_visitados - nos_antes
+    custo_comp = avl.estatisticas.comparacoes - comp_antes
+
+    return {
+        "encontrado": encontrado,
+        "conta": conta_encontrada,
+        "custo_nos_visitados": custo_nos,
+        "comparacoes": custo_comp,
+        "profundidade": len(caminho) - (0 if encontrado else 1),
+        "altura_arvore": avl.altura,
+        "total_nos": avl.tamanho,
+        "caminho": caminho
+    }
+
+
+def rastrear_busca_rb(rb: ArvoreRubroNegra, numero_conta: int) -> Dict[str, Any]:
+    caminho: List[Dict[str, Any]] = []
+    atual = rb.raiz
+    passo = 1
+    encontrado = False
+    conta_encontrada: Optional[ContaBancaria] = None
+
+    nos_antes = rb.estatisticas.nos_visitados
+    comp_antes = rb.estatisticas.comparacoes
+
+    while atual != rb.NIL and atual is not None:
+        rb.estatisticas.comparacoes += 1
+        rb.estatisticas.nos_visitados += 1
+
+        cor_nome = "PRETO" if atual.cor == Cor.PRETO else "VERMELHO"
+        chave_atual = atual.chave
+        titular_atual = atual.conta.titular if atual.conta else f"Conta {chave_atual}"
+        saldo_atual = float(atual.conta.saldo) if atual.conta else 0.0
+
+        if numero_conta == chave_atual:
+            encontrado = True
+            conta_encontrada = atual.conta
+            caminho.append({
+                "passo": passo,
+                "chave": chave_atual,
+                "titular": titular_atual,
+                "saldo": saldo_atual,
+                "cor": cor_nome,
+                "direcao": "LOCALIZADO",
+                "comparacao": f"Chave #{numero_conta} == #{chave_atual} (Registro localizado com sucesso)",
+                "status": "sucesso"
+            })
+            break
+        elif numero_conta < chave_atual:
+            caminho.append({
+                "passo": passo,
+                "chave": chave_atual,
+                "titular": titular_atual,
+                "saldo": saldo_atual,
+                "cor": cor_nome,
+                "direcao": "ESQUERDA",
+                "comparacao": f"Chave #{numero_conta} < #{chave_atual} → Descer para Subárvore Esquerda",
+                "status": "descendo"
+            })
+            atual = atual.esquerda
+        else:
+            caminho.append({
+                "passo": passo,
+                "chave": chave_atual,
+                "titular": titular_atual,
+                "saldo": saldo_atual,
+                "cor": cor_nome,
+                "direcao": "DIREITA",
+                "comparacao": f"Chave #{numero_conta} > #{chave_atual} → Descer para Subárvore Direita",
+                "status": "descendo"
+            })
+            atual = atual.direita
+        passo += 1
+
+    if not encontrado:
+        caminho.append({
+            "passo": passo,
+            "chave": "NIL",
+            "titular": "Sentinela NIL",
+            "saldo": 0.0,
+            "cor": "PRETO",
+            "direcao": "FIM",
+            "comparacao": f"Sentinela NIL atingido → Chave #{numero_conta} inexiste na Árvore Rubro-Negra",
+            "status": "inexistente"
+        })
+
+    custo_nos = rb.estatisticas.nos_visitados - nos_antes
+    custo_comp = rb.estatisticas.comparacoes - comp_antes
+
+    return {
+        "encontrado": encontrado,
+        "conta": conta_encontrada,
+        "custo_nos_visitados": custo_nos,
+        "comparacoes": custo_comp,
+        "profundidade": len(caminho) - (0 if encontrado else 1),
+        "altura_arvore": rb.altura,
+        "altura_negra": rb.calcular_altura_negra(),
+        "total_nos": rb.tamanho,
+        "caminho": caminho
+    }
+
+
 @app.post("/api/buscar")
 def rota_buscar_conta(req: OperacaoChaveRequest):
-    res_avl = store.avl.buscar(req.numero_conta)
-    res_rb = store.rb.buscar(req.numero_conta)
+    rastreio_avl = rastrear_busca_avl(store.avl, req.numero_conta)
+    rastreio_rb = rastrear_busca_rb(store.rb, req.numero_conta)
 
-    c = res_avl if res_avl is not None else res_rb
+    c = rastreio_avl["conta"] if rastreio_avl["conta"] is not None else rastreio_rb["conta"]
     encontrada = c is not None
+
     conta_info = None
     if c is not None:
         conta_info = {
@@ -1171,11 +1350,48 @@ def rota_buscar_conta(req: OperacaoChaveRequest):
             "saldo": float(c.saldo)
         }
 
+    custo_avl = rastreio_avl["custo_nos_visitados"]
+    custo_rb = rastreio_rb["custo_nos_visitados"]
+    dif = custo_avl - custo_rb
+
+    if dif == 0:
+        resumo_comp = f"Paridade de Custo: Ambas as árvores visitaram exatamente {custo_avl} nó(s) no trajeto."
+    elif dif < 0:
+        resumo_comp = f"Árvore AVL foi mais econômica: visitou {abs(dif)} nó(s) a menos devido à restrição rígida de altura (|FB| ≤ 1)."
+    else:
+        resumo_comp = f"Árvore Rubro-Negra visitou {dif} nó(s) a menos no trajeto desta consulta."
+
     return {
         "sucesso": True,
         "encontrada": encontrada,
+        "numero_buscado": req.numero_conta,
         "conta": conta_info,
-        "mensagem": f"Conta {req.numero_conta} " + ("localizada com sucesso." if encontrada else "não consta no cadastro bancário.")
+        "mensagem": f"Conta #{req.numero_conta} " + ("localizada com sucesso no sistema." if encontrada else "não consta no cadastro bancário."),
+        "avl": {
+            "encontrado": rastreio_avl["encontrado"],
+            "custo_nos_visitados": rastreio_avl["custo_nos_visitados"],
+            "comparacoes": rastreio_avl["comparacoes"],
+            "profundidade": rastreio_avl["profundidade"],
+            "altura_arvore": rastreio_avl["altura_arvore"],
+            "total_nos": rastreio_avl["total_nos"],
+            "caminho": rastreio_avl["caminho"]
+        },
+        "rubro_negra": {
+            "encontrado": rastreio_rb["encontrado"],
+            "custo_nos_visitados": rastreio_rb["custo_nos_visitados"],
+            "comparacoes": rastreio_rb["comparacoes"],
+            "profundidade": rastreio_rb["profundidade"],
+            "altura_arvore": rastreio_rb["altura_arvore"],
+            "altura_negra": rastreio_rb["altura_negra"],
+            "total_nos": rastreio_rb["total_nos"],
+            "caminho": rastreio_rb["caminho"]
+        },
+        "comparativo": {
+            "diferenca_nos": dif,
+            "mesmo_custo": dif == 0,
+            "resumo": resumo_comp,
+            "complexidade_teorica": "O(log n)"
+        }
     }
 
 

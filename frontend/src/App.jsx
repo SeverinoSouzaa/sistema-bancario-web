@@ -33,6 +33,7 @@ import {
 import BinaryTreeVisualizer from './components/BinaryTreeVisualizer';
 import DetailedExecutionInspector from './components/DetailedExecutionInspector';
 import ExperimentsDashboard from './components/ExperimentsDashboard';
+import SearchAnalysisView from './components/SearchAnalysisView';
 import treeLogo from './assets/tree-logo.png';
 
 const API_BASE = 'http://localhost:8000';
@@ -113,6 +114,7 @@ export default function App() {
   const [tipoConta, setTipoConta] = useState('Corrente');
   const [chaveOperacao, setChaveOperacao] = useState('');
   const [searchResult, setSearchResult] = useState(null);
+  const [searchAnalysis, setSearchAnalysis] = useState(null);
 
   // Notifications
   const [notification, setNotification] = useState(null);
@@ -194,9 +196,10 @@ export default function App() {
     }
   };
 
-  const handleBuscar = async (e) => {
-    e.preventDefault();
-    const num = parseInt(chaveOperacao);
+  const handleBuscar = async (e, contaNumeroManual = null) => {
+    if (e) e.preventDefault();
+    const raw = contaNumeroManual !== null ? contaNumeroManual : chaveOperacao;
+    const num = parseInt(raw);
     if (isNaN(num) || num <= 0) {
       return notify('Informe o número da conta para consulta.', 'error');
     }
@@ -212,13 +215,17 @@ export default function App() {
       const json = await res.json();
       if (!res.ok) throw new Error(formatErrorMessage(json.detail, 'Erro na busca'));
 
+      setSearchAnalysis(json);
+      setChaveOperacao('');
+      setViewMode('search');
+      setHighlightKey(num);
+
       if (json.encontrada) {
         setSearchResult(json.conta);
-        setHighlightKey(num);
-        notify(`Conta ${num} encontrada!`, 'success');
+        notify(`Conta #${num} localizada com sucesso! Relatório comparativo gerado.`, 'success');
       } else {
         setSearchResult(null);
-        notify(`Conta ${num} não consta no cadastro bancário.`, 'warning');
+        notify(`Conta #${num} não consta no cadastro bancário.`, 'warning');
       }
     } catch (err) {
       notify(err.message, 'error');
@@ -505,6 +512,12 @@ export default function App() {
                         placeholder="Digite o número da conta..."
                         value={chaveOperacao}
                         onChange={(e) => setChaveOperacao(e.target.value.replace(/\D/g, ''))}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            if (chaveOperacao) handleBuscar(e);
+                          }
+                        }}
                         className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-hidden focus:border-[#854d27] focus:ring-1 focus:ring-[#854d27]/25 font-mono transition-all duration-200 peer"
                       />
                       <Search className="w-3.5 h-3.5 text-slate-400 peer-focus:text-[#854d27] transition-colors duration-200 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -561,7 +574,8 @@ export default function App() {
                 { id: 'split', label: 'Lado a Lado (Comparativo)', icon: ArrowRightLeft },
                 { id: 'avl', label: 'Foco na AVL', icon: Layers },
                 { id: 'rb', label: 'Foco na Rubro-Negra', icon: CircleDot },
-                { id: 'traversals', label: 'Caminhamentos & Extremos', icon: TrendingUp }
+                { id: 'traversals', label: 'Caminhamentos & Extremos', icon: TrendingUp },
+                { id: 'search', label: 'Análise de Busca', icon: Search }
               ].map((item) => {
                 const IconComponent = item.icon;
                 const isActive = viewMode === item.id;
@@ -762,6 +776,7 @@ export default function App() {
               {viewMode === 'avl' && 'Visualização: Foco na Árvore AVL'}
               {viewMode === 'rb' && 'Visualização: Foco na Árvore Rubro-Negra'}
               {viewMode === 'traversals' && 'Visualização: Caminhamentos & Extremos'}
+              {viewMode === 'search' && 'Visualização: Diagnóstico & Rastreamento de Busca'}
               {viewMode === 'experiments' && 'Laboratório de Experimentos Automáticos'}
             </span>
           </div>
@@ -836,6 +851,16 @@ export default function App() {
               runTrigger={experimentRunKey}
               key={experimentRunKey}
             />
+          ) : viewMode === 'search' ? (
+            /* ================= VIEW: ANÁLISE DE BUSCA (Item 3 do Terminal) ================= */
+            <div className="flex-1 overflow-y-auto p-6 max-w-6xl mx-auto w-full">
+              <SearchAnalysisView
+                searchData={searchAnalysis}
+                onSearch={handleBuscar}
+                loading={loading}
+                currentTreesData={data}
+              />
+            </div>
           ) : viewMode === 'traversals' ? (
             /* ================= VIEW: CAMINHAMENTOS & EXTREMOS (Paridade com main.py Opção 5) ================= */
             <div className="flex-1 overflow-y-auto p-8 max-w-5xl mx-auto w-full space-y-6">
