@@ -631,13 +631,13 @@ export default function SearchAnalysisView({
 
             <div className="text-xs text-neutral-700 leading-relaxed space-y-2">
               <p>
-                • <b>Propriedade de Busca Binária Pura:</b> Tanto na Árvore AVL quanto na Árvore Rubro-Negra, a operação de busca utiliza estritamente a relação de ordem de chave ($k &lt; \text{chave} \implies \text{esquerda}$, $k &gt; \text{chave} \implies \text{direita}$).
+                • <b>Propriedade de Busca Binária Pura:</b> Tanto na Árvore AVL quanto na Árvore Rubro-Negra, a operação de busca utiliza estritamente a relação de ordem de chave (se a chave procurada for menor que o nó atual, desce para a esquerda; se for maior, desce para a direita).
               </p>
               <p>
-                • <b>O papel das cores na busca:</b> As cores na Árvore Rubro-Negra <i>não interferem</i> na tomada de decisão da busca. Sua função é puramente estrutural, garantindo que nenhum caminho da raiz até uma folha NIL seja mais do que duas vezes mais longo que qualquer outro ($h \le 2\log_2(n+1)$).
+                • <b>O papel das cores na busca:</b> As cores na Árvore Rubro-Negra <i>não interferem</i> na tomada de decisão da busca. Sua função é puramente estrutural, garantindo que nenhum caminho da raiz até uma folha NIL seja mais do que duas vezes mais longo que qualquer outro (h ≤ 2 · log₂(n + 1)).
               </p>
               <p>
-                • <b>Vantagem de Leitura da AVL:</b> Como a Árvore AVL impõe o critério estrito de diferença de altura $|FB| \le 1$, sua altura total tende a ser ligeiramente mais compacta do que a Rubro-Negra. Por isso, em sistemas com grande volume de consultas e raras modificações (<i>read-heavy</i>), a AVL costuma visitar nós com profundidades ligeiramente menores ou equivalentes.
+                • <b>Vantagem de Leitura da AVL:</b> Como a Árvore AVL impõe o critério estrito de diferença de altura (|FB| ≤ 1), sua altura total tende a ser ligeiramente mais compacta do que a Rubro-Negra. Por isso, em sistemas com grande volume de consultas e raras modificações (<i>read-heavy</i>), a AVL costuma visitar nós com profundidades ligeiramente menores ou equivalentes.
               </p>
             </div>
           </div>
