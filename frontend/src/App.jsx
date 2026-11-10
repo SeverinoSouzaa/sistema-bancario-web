@@ -464,7 +464,7 @@ export default function App() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full mt-1 text-xs font-semibold py-2 px-3 rounded-lg bg-[#14532d] text-white hover:bg-[#166534] active:bg-[#0f3d21] transition-colors duration-200 flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                    className="w-full mt-1 text-xs font-semibold py-2 px-3 rounded-lg bg-[#12372a] text-white hover:bg-[#184535] active:bg-[#0b241c] transition-colors duration-200 flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
                   >
                     <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>{loading ? 'Cadastrando...' : 'Inserir nas Duas Árvores'}</span>
@@ -683,7 +683,7 @@ export default function App() {
                     <button
                       type="button"
                       onClick={() => solicitarExecucaoExperimento('custom', experimentCustomN)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white font-semibold transition-colors duration-200 shrink-0 shadow-2xs cursor-pointer"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-[#12372a] hover:bg-[#184535] active:bg-[#0b241c] text-white font-semibold transition-colors duration-200 shrink-0 shadow-2xs cursor-pointer"
                     >
                       Rodar
                     </button>
@@ -707,7 +707,7 @@ export default function App() {
                 <div
                   className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition-all shrink-0 ${
                     showNil
-                      ? 'bg-[#14532d] border-[#14532d] text-white shadow-2xs'
+                      ? 'bg-[#12372a] border-[#12372a] text-white shadow-2xs'
                       : 'bg-white border-slate-300 group-hover:border-[#854d27]'
                   }`}
                 >
@@ -733,7 +733,7 @@ export default function App() {
         {/* Sidebar Footer (Profile / Info Card) */}
         <div className="border-t border-slate-200 p-3 bg-slate-50/50 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#14532d]/10 text-[#14532d] border border-[#14532d]/20 flex items-center justify-center font-bold text-xs shadow-2xs">
+            <div className="w-8 h-8 rounded-full bg-[#12372a]/10 text-[#12372a] border border-[#12372a]/20 flex items-center justify-center font-bold text-xs shadow-2xs">
               UF
             </div>
             <div className="leading-tight">
@@ -1386,7 +1386,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowGuideModal(false)}
-                  className="px-4 py-2 rounded-lg bg-[#14532d] text-xs font-semibold text-white hover:bg-[#166534] active:bg-[#0f3d21] transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#12372a] text-xs font-semibold text-white hover:bg-[#184535] active:bg-[#0b241c] transition-colors cursor-pointer"
                 >
                   Entendi
                 </button>
@@ -1402,7 +1402,7 @@ export default function App() {
               {/* Modal Header */}
               <div className="px-6 py-5 border-b border-stone-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#14532d]/10 border border-[#14532d]/20 text-[#14532d] flex items-center justify-center font-bold shadow-xs">
+                  <div className="w-9 h-9 rounded-xl bg-[#12372a]/10 border border-[#12372a]/20 text-[#12372a] flex items-center justify-center font-bold shadow-xs">
                     <Activity className="w-5 h-5" />
                   </div>
                   <div>
@@ -1426,7 +1426,7 @@ export default function App() {
                     <span className="text-xs font-bold text-neutral-900 font-mono">
                       {confirmExperimentModal.label}
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#14532d]/10 text-[#14532d] font-semibold font-mono">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#12372a]/10 text-[#12372a] font-semibold font-mono">
                       seed = 42
                     </span>
                   </div>
@@ -1470,7 +1470,7 @@ export default function App() {
                       setConfirmExperimentModal(null);
                       handleDispararExperimento(modo, customVal);
                     }}
-                    className="px-4 py-2 text-xs font-semibold text-white bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] rounded-xl transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
+                    className="px-4 py-2 text-xs font-semibold text-white bg-[#12372a] hover:bg-[#184535] active:bg-[#0b241c] rounded-xl transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
                     <span>Confirmar e Executar</span>
