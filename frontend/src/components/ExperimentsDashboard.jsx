@@ -30,7 +30,8 @@ export default function ExperimentsDashboard({
   onBackToTrees,
   onNotify,
   initialMode = 'padrao',
-  initialN = '500'
+  initialN = '500',
+  runTrigger = 0
 }) {
   // Execution Mode: 'padrao' (100, 1000, 10000), 'rapida' (100), 'custom' (livre)
   const [bateriaMode, setBateriaMode] = useState(initialMode);
@@ -181,12 +182,12 @@ export default function ExperimentsDashboard({
     }
   };
 
-  // Auto-run on initial mount if empty
+  // Run batch only when triggered by user confirmation
   useEffect(() => {
-    if (Object.keys(resultsBySize).length === 0) {
+    if (runTrigger > 0) {
       handleStartBatch(initialMode, initialN);
     }
-  }, [initialMode, initialN]);
+  }, [runTrigger, initialMode, initialN]);
 
   // Export handler (CSV or Markdown)
   const handleExport = async (formato) => {
@@ -315,6 +316,30 @@ export default function ExperimentsDashboard({
       </div>
 
       <div className="p-6 space-y-6 max-w-7xl mx-auto w-full">
+        {/* Empty State when no experiments have run yet */}
+        {availableSizes.length === 0 && !running && (
+          <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center max-w-xl mx-auto shadow-xs my-8 space-y-4">
+            <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mx-auto shadow-2xs">
+              <Activity className="w-7 h-7" />
+            </div>
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Nenhum experimento executado no momento</h3>
+              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+                Selecione uma das opções no menu lateral ou clique no botão abaixo para iniciar a bateria de testes científicos com seed = 42.
+              </p>
+            </div>
+            <div className="pt-2 flex justify-center gap-3">
+              <button
+                onClick={() => handleStartBatch('padrao')}
+                className="text-xs px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
+              >
+                <Play className="w-3.5 h-3.5" />
+                <span>Iniciar Bateria Completa (100, 1k, 10k)</span>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* ================= STEPPER & SAFETY INTERLOCK BANNER ================= */}
         {bateriaMode === 'padrao' && stepperQueue.length > 1 && (
           <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs">

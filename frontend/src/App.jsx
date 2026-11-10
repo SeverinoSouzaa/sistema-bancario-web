@@ -23,7 +23,8 @@ import {
   UserPlus,
   CircleDot,
   Zap,
-  Activity
+  Activity,
+  Play
 } from 'lucide-react';
 import BinaryTreeVisualizer from './components/BinaryTreeVisualizer';
 import DetailedExecutionInspector from './components/DetailedExecutionInspector';
@@ -54,9 +55,12 @@ export default function App() {
   const [experimentRunKey, setExperimentRunKey] = useState(0);
   const [showCustomNInput, setShowCustomNInput] = useState(false);
 
-  // Floating Action Modals (Cadastrar e Consultar)
-  const [showCadastrarModal, setShowCadastrarModal] = useState(false);
-  const [showConsultarModal, setShowConsultarModal] = useState(false);
+  // Accordion state for Operações de Conta in the sidebar
+  const [cadastrarOpen, setCadastrarOpen] = useState(false);
+  const [consultarOpen, setConsultarOpen] = useState(false);
+
+  // Confirmation Modal for running experiments
+  const [confirmExperimentModal, setConfirmExperimentModal] = useState(null);
 
   const handleDispararExperimento = (modo, customVal = '500') => {
     setExperimentMode(modo);
@@ -68,6 +72,27 @@ export default function App() {
     setStepTreeAVL(null);
     setStepTreeRB(null);
     setStepFocusKey(null);
+  };
+
+  const solicitarExecucaoExperimento = (modo, customVal = '500') => {
+    let label = 'Bateria Completa (N = 100, 1.000 e 10.000)';
+    let desc = 'Executa as simulações para os 3 tamanhos sob seed determinística (seed = 42), abrangendo inserções, buscas e 3 bateladas de remoção (10%, 30% e 50%), com trava de segurança interativa para inspeção.';
+
+    if (modo === 'rapida') {
+      label = 'Validação Rápida (N = 100)';
+      desc = 'Executa a bateria de testes completa para N = 100 contas. A execução é quase instantânea (~13ms) para conferência imediata de todas as métricas estruturais.';
+    } else if (modo === 'custom') {
+      const parsed = parseInt(customVal) || 500;
+      label = `Teste Personalizado (N = ${parsed.toLocaleString()})`;
+      desc = `Executa as baterias comparativas para exatamente ${parsed.toLocaleString()} contas bancárias sob a semente determinística seed = 42.`;
+    }
+
+    setConfirmExperimentModal({
+      modo,
+      customVal,
+      label,
+      desc
+    });
   };
 
   // Drawers & Modals
@@ -288,6 +313,176 @@ export default function App() {
 
         {/* Sidebar Scrollable Body */}
         <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-6">
+          {/* Section: OPERAÇÕES DE CONTA (Topo das Opções) */}
+          <div>
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+              Operações de Conta
+            </span>
+            <div className="space-y-1">
+              {/* Item: Cadastrar Conta */}
+              <button
+                type="button"
+                onClick={() => setCadastrarOpen(!cadastrarOpen)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                  cadastrarOpen ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-700 hover:bg-slate-100/70 hover:text-slate-900'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <UserPlus className="w-4 h-4 text-slate-400" />
+                  <span>Cadastrar Conta</span>
+                </div>
+                <ChevronRight
+                  className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                  style={{ transform: cadastrarOpen ? 'rotate(90deg)' : 'none' }}
+                />
+              </button>
+
+              {/* Subsection: Cadastrar Form Inline */}
+              {cadastrarOpen && (
+                <form
+                  onSubmit={handleInserir}
+                  className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 my-1.5 animate-in fade-in duration-150"
+                >
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Número da Conta <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Ex: 20"
+                      value={numeroConta}
+                      onChange={(e) => setNumeroConta(e.target.value)}
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 font-mono transition-all"
+                      required
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Nome do Titular <span className="text-slate-400 font-normal">(opcional)</span>
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Ex: Carlos Silva"
+                      value={titular}
+                      onChange={(e) => setTitular(e.target.value)}
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Saldo (R$)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        value={saldo}
+                        onChange={(e) => setSaldo(e.target.value)}
+                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tipo</label>
+                      <select
+                        value={tipoConta}
+                        onChange={(e) => setTipoConta(e.target.value)}
+                        className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
+                      >
+                        <option value="Corrente">Corrente</option>
+                        <option value="Poupanca">Poupança</option>
+                        <option value="Salario">Salário</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    className="w-full mt-1 text-xs font-semibold py-2 px-3 rounded-lg bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>{loading ? 'Cadastrando...' : 'Inserir nas Duas Árvores'}</span>
+                  </button>
+                </form>
+              )}
+
+              {/* Item: Consultar / Excluir */}
+              <button
+                type="button"
+                onClick={() => setConsultarOpen(!consultarOpen)}
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
+                  consultarOpen ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-700 hover:bg-slate-100/70 hover:text-slate-900'
+                }`}
+              >
+                <div className="flex items-center gap-2.5">
+                  <Search className="w-4 h-4 text-slate-400" />
+                  <span>Consultar / Excluir</span>
+                </div>
+                <ChevronRight
+                  className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
+                  style={{ transform: consultarOpen ? 'rotate(90deg)' : 'none' }}
+                />
+              </button>
+
+              {/* Subsection: Consultar Form Inline */}
+              {consultarOpen && (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 my-1.5 animate-in fade-in duration-150">
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Número da Conta <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      placeholder="Digite o número da conta..."
+                      value={chaveOperacao}
+                      onChange={(e) => setChaveOperacao(e.target.value)}
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 font-mono"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-2 pt-0.5">
+                    <button
+                      type="button"
+                      onClick={handleBuscar}
+                      disabled={loading || !chaveOperacao}
+                      className="text-xs font-semibold py-1.5 px-2 rounded-lg border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                    >
+                      <Search className="w-3.5 h-3.5 text-slate-500" />
+                      <span>Localizar</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleRemover}
+                      disabled={loading || !chaveOperacao}
+                      className="text-xs font-semibold py-1.5 px-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                      <span>Encerrar</span>
+                    </button>
+                  </div>
+
+                  {/* Search Result Card */}
+                  {searchResult && (
+                    <div className="p-2.5 rounded-lg border border-slate-200 bg-white space-y-1.5 mt-2">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-mono font-bold text-slate-900">Conta #{searchResult.numero_conta}</span>
+                        <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+                          Ativa
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-600">Titular: <span className="font-medium text-slate-800">{searchResult.titular}</span></p>
+                      <p className="text-[11px] text-slate-600">Saldo: <span className="font-mono font-semibold text-slate-800">R$ {searchResult.saldo.toFixed(2)}</span></p>
+                      <p className="text-[11px] text-slate-600">Tipo: <span className="font-medium text-slate-800">{searchResult.tipo}</span></p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* Section: VISUALIZAÇÃO DE ÁRVORES */}
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
@@ -325,39 +520,7 @@ export default function App() {
             </div>
           </div>
 
-          {/* Section: OPERAÇÕES DE CONTA */}
-          <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
-              Operações de Conta
-            </span>
-            <div className="space-y-1">
-              <button
-                type="button"
-                onClick={() => setShowCadastrarModal(true)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-100/70 hover:text-slate-900 transition-colors text-left cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <UserPlus className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors" />
-                  <span>Cadastrar Conta</span>
-                </div>
-                <Plus className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-
-              <button
-                type="button"
-                onClick={() => setShowConsultarModal(true)}
-                className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-700 hover:bg-slate-100/70 hover:text-slate-900 transition-colors text-left cursor-pointer group"
-              >
-                <div className="flex items-center gap-2.5">
-                  <Search className="w-4 h-4 text-slate-400 group-hover:text-slate-900 transition-colors" />
-                  <span>Consultar / Excluir</span>
-                </div>
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-            </div>
-          </div>
-
-          {/* Section: EXPERIMENTOS CIENTÍFICOS */}
+          {/* Section: EXPERIMENTOS AUTOMÁTICOS */}
           <div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
               Experimentos Automáticos
@@ -365,7 +528,7 @@ export default function App() {
             <div className="space-y-1">
               <button
                 type="button"
-                onClick={() => handleDispararExperimento('padrao')}
+                onClick={() => solicitarExecucaoExperimento('padrao')}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                   viewMode === 'experiments' && experimentMode === 'padrao'
                     ? 'bg-indigo-50 text-indigo-900 font-semibold border border-indigo-200 shadow-2xs'
@@ -383,7 +546,7 @@ export default function App() {
 
               <button
                 type="button"
-                onClick={() => handleDispararExperimento('rapida')}
+                onClick={() => solicitarExecucaoExperimento('rapida')}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
                   viewMode === 'experiments' && experimentMode === 'rapida'
                     ? 'bg-indigo-50 text-indigo-900 font-semibold border border-indigo-200 shadow-2xs'
@@ -417,7 +580,7 @@ export default function App() {
                     <span>Tamanho Personalizado</span>
                   </div>
                   <ChevronRight
-                    className={`w-3.5 h-3.5 text-slate-400 transition-transform ${
+                    className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
                       showCustomNInput ? 'rotate-90' : ''
                     }`}
                   />
@@ -436,7 +599,7 @@ export default function App() {
                     />
                     <button
                       type="button"
-                      onClick={() => handleDispararExperimento('custom', experimentCustomN)}
+                      onClick={() => solicitarExecucaoExperimento('custom', experimentCustomN)}
                       className="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shrink-0 shadow-2xs cursor-pointer"
                     >
                       Rodar
@@ -475,7 +638,7 @@ export default function App() {
           </div>
         </div>
 
-        {/* Sidebar Footer (Profile / Info Card - Alex Morgan RevenuePulseAI style) */}
+        {/* Sidebar Footer (Profile / Info Card) */}
         <div className="border-t border-slate-200 p-3 bg-slate-50/50 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-800 flex items-center justify-center font-bold text-xs shadow-2xs">
@@ -498,59 +661,17 @@ export default function App() {
 
       {/* -------------------- MAIN WORKSPACE AREA -------------------- */}
       <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        {/* Top Header Bar */}
+        {/* Top Header Bar - Clean view title only */}
         <header className="h-14 border-b border-slate-200 bg-white px-6 flex items-center justify-between shrink-0 z-10">
-          <div className="flex items-center gap-3">
-            {/* Quick Actions (Floating Card Triggers) */}
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setShowCadastrarModal(true)}
-                className="text-xs px-3 py-1.5 rounded-lg bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Cadastrar Conta</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowConsultarModal(true)}
-                className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-semibold hover:bg-slate-50 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
-              >
-                <Search className="w-3.5 h-3.5 text-slate-500" />
-                <span>Consultar / Excluir</span>
-              </button>
-            </div>
-
-            {/* Subtle Divider */}
-            <div className="h-5 w-px bg-slate-200" />
-
-            {/* View Mode Navigation Tabs */}
-            <div className="flex items-center gap-1">
-              {[
-                { id: 'split', label: 'Lado a Lado' },
-                { id: 'avl', label: 'Foco na AVL' },
-                { id: 'rb', label: 'Foco na Rubro-Negra' },
-                { id: 'traversals', label: 'Caminhamentos & Extremos' },
-                { id: 'experiments', label: 'Experimentos Automáticos' }
-              ].map((tab) => (
-                <button
-                  key={tab.id}
-                  onClick={() => {
-                    setViewMode(tab.id);
-                    setStepTreeAVL(null);
-                    setStepTreeRB(null);
-                    setStepFocusKey(null);
-                  }}
-                  className={`text-xs px-3 py-1.5 rounded-md transition-all font-medium cursor-pointer ${
-                    viewMode === tab.id
-                      ? 'bg-slate-100 text-slate-900 font-semibold shadow-2xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex items-center gap-2.5">
+            <span className="w-2 h-2 rounded-full bg-slate-400" />
+            <span className="text-xs font-semibold text-slate-800 tracking-tight">
+              {viewMode === 'split' && 'Visualização: Lado a Lado (Comparativo AVL vs Rubro-Negra)'}
+              {viewMode === 'avl' && 'Visualização: Foco na Árvore AVL'}
+              {viewMode === 'rb' && 'Visualização: Foco na Árvore Rubro-Negra'}
+              {viewMode === 'traversals' && 'Visualização: Caminhamentos & Extremos'}
+              {viewMode === 'experiments' && 'Laboratório de Experimentos Automáticos'}
+            </span>
           </div>
 
           {/* Right Header Status & Actions */}
@@ -613,13 +734,14 @@ export default function App() {
         {/* Main Content Viewport */}
         <div className="flex-1 overflow-hidden relative flex flex-col">
           {viewMode === 'experiments' ? (
-            /* ================= VIEW: EXPERIMENTOS CIENTÍFICOS (Item 9 do Terminal · Seção 5) ================= */
+            /* ================= VIEW: EXPERIMENTOS CIENTÍFICOS (Item 9 do Terminal) ================= */
             <ExperimentsDashboard
               apiBase={API_BASE}
               onBackToTrees={() => setViewMode('split')}
               onNotify={notify}
               initialMode={experimentMode}
               initialN={experimentCustomN}
+              runTrigger={experimentRunKey}
               key={experimentRunKey}
             />
           ) : viewMode === 'traversals' ? (
@@ -1181,134 +1303,24 @@ export default function App() {
           </div>
         )}
 
-        {/* ================= MODAL: CADASTRAR CONTA (Estilo Add Member / Floating Card) ================= */}
-        {showCadastrarModal && (
-          <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
-            <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
-              {/* Modal Header */}
-              <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold shadow-xs">
-                    <Plus className="w-5 h-5" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Cadastrar Nova Conta</h3>
-                    <p className="text-xs text-slate-500">Inserção simultânea e balanceada nas duas árvores</p>
-                  </div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setShowCadastrarModal(false)}
-                  className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Modal Form */}
-              <form onSubmit={async (e) => {
-                await handleInserir(e);
-                setShowCadastrarModal(false);
-              }} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Número da Conta <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="number"
-                    min="1"
-                    placeholder="Ex: 20"
-                    value={numeroConta}
-                    onChange={(e) => setNumeroConta(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all font-mono"
-                    required
-                    autoFocus
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Nome do Titular <span className="text-slate-400 font-normal">(opcional)</span>
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Ex: Carlos Silva"
-                    value={titular}
-                    onChange={(e) => setTitular(e.target.value)}
-                    className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Saldo Inicial (R$)</label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      value={saldo}
-                      onChange={(e) => setSaldo(e.target.value)}
-                      className="w-full text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all font-mono"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">Tipo de Conta</label>
-                    <select
-                      value={tipoConta}
-                      onChange={(e) => setTipoConta(e.target.value)}
-                      className="w-full text-xs px-3 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all"
-                    >
-                      <option value="Corrente">Corrente</option>
-                      <option value="Poupanca">Poupança</option>
-                      <option value="Salario">Salário</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Modal Actions */}
-                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => setShowCadastrarModal(false)}
-                    className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 rounded-xl transition-colors flex items-center gap-2 shadow-xs cursor-pointer disabled:opacity-50"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    <span>{loading ? 'Cadastrando...' : 'Cadastrar Conta'}</span>
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {/* ================= MODAL: CONSULTAR / EXCLUIR CONTA ================= */}
-        {showConsultarModal && (
+        {/* ================= MODAL: CONFIRMAR EXECUÇÃO DE EXPERIMENTO ================= */}
+        {confirmExperimentModal && (
           <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-2xl max-w-md w-full overflow-hidden animate-in zoom-in-95 duration-200">
               {/* Modal Header */}
               <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-9 h-9 rounded-xl bg-indigo-50 border border-indigo-200 text-indigo-700 flex items-center justify-center font-bold shadow-xs">
-                    <Search className="w-4 h-4" />
+                    <Activity className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-sm font-semibold text-slate-900">Consultar ou Encerrar Conta</h3>
-                    <p className="text-xs text-slate-500">Busca e encerramento com balanceamento automático</p>
+                    <h3 className="text-sm font-semibold text-slate-900">Confirmar Execução de Testes</h3>
+                    <p className="text-xs text-slate-500">Laboratório de Experimentos Automáticos</p>
                   </div>
                 </div>
                 <button
                   type="button"
-                  onClick={() => {
-                    setShowConsultarModal(false);
-                    setSearchResult(null);
-                  }}
+                  onClick={() => setConfirmExperimentModal(null)}
                   className="w-8 h-8 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 flex items-center justify-center transition-colors cursor-pointer"
                 >
                   <X className="w-4 h-4" />
@@ -1317,108 +1329,59 @@ export default function App() {
 
               {/* Modal Body */}
               <div className="p-6 space-y-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Número da Conta <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Digite o número da conta..."
-                      value={chaveOperacao}
-                      onChange={(e) => setChaveOperacao(e.target.value)}
-                      className="flex-1 text-xs px-3.5 py-2.5 rounded-xl border border-slate-200 bg-slate-50/50 text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:bg-white focus:ring-1 focus:ring-slate-900 transition-all font-mono"
-                      autoFocus
-                    />
-                    <button
-                      type="button"
-                      onClick={handleBuscar}
-                      disabled={loading || !chaveOperacao}
-                      className="px-4 py-2.5 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors flex items-center gap-1.5 shadow-xs cursor-pointer disabled:opacity-50 shrink-0"
-                    >
-                      <Search className="w-3.5 h-3.5" />
-                      <span>Localizar</span>
-                    </button>
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-900 font-mono">
+                      {confirmExperimentModal.label}
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-indigo-100 text-indigo-700 font-semibold font-mono">
+                      seed = 42
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-600 leading-relaxed">
+                    {confirmExperimentModal.desc}
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-3 gap-2 text-center text-xs">
+                  <div className="p-2 rounded-lg border border-slate-100 bg-white">
+                    <span className="text-[10px] uppercase text-slate-400 font-semibold block">Estruturas</span>
+                    <span className="font-semibold text-slate-800 text-[11px]">AVL vs RN</span>
+                  </div>
+                  <div className="p-2 rounded-lg border border-slate-100 bg-white">
+                    <span className="text-[10px] uppercase text-slate-400 font-semibold block">Cenários</span>
+                    <span className="font-semibold text-slate-800 text-[11px]">Aleatório & Crescente</span>
+                  </div>
+                  <div className="p-2 rounded-lg border border-slate-100 bg-white">
+                    <span className="text-[10px] uppercase text-slate-400 font-semibold block">Remoções</span>
+                    <span className="font-semibold text-slate-800 text-[11px]">10%, 30% e 50%</span>
                   </div>
                 </div>
 
-                {/* Search Result Card if Found */}
-                {searchResult && (
-                  <div className="p-4 rounded-xl border border-slate-200 bg-slate-50 space-y-3 animate-in fade-in duration-150">
-                    <div className="flex items-center justify-between">
-                      <span className="font-mono font-bold text-sm text-slate-900">
-                        Conta #{searchResult.numero_conta}
-                      </span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-semibold">
-                        Ativa
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2 text-xs text-slate-600">
-                      <div>
-                        <p className="text-[10px] uppercase text-slate-400 font-medium">Titular</p>
-                        <p className="font-semibold text-slate-800">{searchResult.titular}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase text-slate-400 font-medium">Saldo</p>
-                        <p className="font-mono font-semibold text-slate-800">R$ {searchResult.saldo.toFixed(2)}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase text-slate-400 font-medium">Tipo</p>
-                        <p className="font-medium text-slate-800">{searchResult.tipo}</p>
-                      </div>
-                      <div>
-                        <p className="text-[10px] uppercase text-slate-400 font-medium">Agência</p>
-                        <p className="font-mono font-medium text-slate-800">{searchResult.agencia}</p>
-                      </div>
-                    </div>
+                <p className="text-[11px] text-slate-500">
+                  Ao confirmar, os cálculos serão gerados dinamicamente pelo algoritmo em tempo real, com total reprodutibilidade dos resultados.
+                </p>
 
-                    <div className="pt-2 border-t border-slate-200 flex justify-end">
-                      <button
-                        type="button"
-                        onClick={async (e) => {
-                          await handleRemover(e);
-                          setShowConsultarModal(false);
-                        }}
-                        disabled={loading}
-                        className="px-3.5 py-1.5 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                      >
-                        <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                        <span>Encerrar Esta Conta</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {/* Direct remove button if no search done yet */}
-                {!searchResult && chaveOperacao && (
-                  <div className="pt-2 flex justify-end">
-                    <button
-                      type="button"
-                      onClick={async (e) => {
-                        await handleRemover(e);
-                        setShowConsultarModal(false);
-                      }}
-                      disabled={loading}
-                      className="px-3.5 py-2 text-xs font-semibold text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl transition-colors flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
-                    >
-                      <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                      <span>Encerrar Conta #{chaveOperacao}</span>
-                    </button>
-                  </div>
-                )}
-
-                {/* Modal Close Footer */}
-                <div className="flex justify-end pt-2 border-t border-slate-100">
+                {/* Modal Footer Actions */}
+                <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={() => setConfirmExperimentModal(null)}
+                    className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                  >
+                    Cancelar
+                  </button>
                   <button
                     type="button"
                     onClick={() => {
-                      setShowConsultarModal(false);
-                      setSearchResult(null);
+                      const { modo, customVal } = confirmExperimentModal;
+                      setConfirmExperimentModal(null);
+                      handleDispararExperimento(modo, customVal);
                     }}
-                    className="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition-colors cursor-pointer"
+                    className="px-4 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 rounded-xl transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
                   >
-                    Fechar
+                    <Play className="w-3.5 h-3.5 fill-current" />
+                    <span>Confirmar e Executar</span>
                   </button>
                 </div>
               </div>
