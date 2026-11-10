@@ -1256,11 +1256,14 @@ def rastrear_busca_rb(rb: ArvoreRubroNegra, numero_conta: int) -> Dict[str, Any]
     comp_antes = rb.estatisticas.comparacoes
 
     while atual != rb.NIL and atual is not None:
+        chave_atual = atual.chave
+        if chave_atual is None:
+            break
+
         rb.estatisticas.comparacoes += 1
         rb.estatisticas.nos_visitados += 1
 
         cor_nome = "PRETO" if atual.cor == Cor.PRETO else "VERMELHO"
-        chave_atual = atual.chave
         titular_atual = atual.conta.titular if atual.conta else f"Conta {chave_atual}"
         saldo_atual = float(atual.conta.saldo) if atual.conta else 0.0
 
