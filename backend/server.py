@@ -292,6 +292,209 @@ def simular_passos_completos_avl(avl_store: Any, conta: Any) -> Dict[str, Any]:
     }
 
 
+def simular_passos_remocao_avl(avl_store: Any, numero_conta: int) -> Dict[str, Any]:
+    """
+    Simula com precisão cirúrgica a remoção AVL passo a passo para capturar:
+    - antes: árvore original antes da remoção
+    - desbalanceada: árvore com o nó removido via BST pura (com alturas/FB atualizados), revelando o ponto crítico
+    - passo1: no caso de rotação dupla (LR ou RL), o estado intermediário após a rotação simples no filho
+    - final: árvore resultante após rotação e rebalanceamento
+    - caso: "CASO LL", "CASO RR", "CASO LR", "CASO RL" ou None
+    - no_desbalanceado, fb_detectado, filho, no_promovido, grau, sucessor
+    """
+    if avl_store.raiz is None:
+        return {}
+
+    def _recalcular_alturas(no: Any) -> int:
+        if no is None:
+            return -1
+        _recalcular_alturas(no.esquerda)
+        _recalcular_alturas(no.direita)
+        no.atualizar_altura()
+        return no.altura
+
+    def _menor_no(no: Any) -> Any:
+        atual = no
+        while atual.esquerda is not None:
+            atual = atual.esquerda
+        return atual
+
+    grau_removido: Optional[int] = None
+    sucessor_chave: Optional[int] = None
+
+    # 1. Remoção BST pura sem rotações para registrar o estado desbalanceado
+    def _rem_bst(no: Any, chave: int) -> Any:
+        nonlocal grau_removido, sucessor_chave
+        if no is None:
+            return None
+        if chave < no.chave:
+            no.esquerda = _rem_bst(no.esquerda, chave)
+        elif chave > no.chave:
+            no.direita = _rem_bst(no.direita, chave)
+        else:
+            if grau_removido is None:
+                if no.esquerda is None and no.direita is None:
+                    grau_removido = 0
+                elif no.esquerda is None or no.direita is None:
+                    grau_removido = 1
+                else:
+                    grau_removido = 2
+
+            if no.esquerda is None and no.direita is None:
+                return None
+            elif no.esquerda is None:
+                return no.direita
+            elif no.direita is None:
+                return no.esquerda
+            else:
+                suc = _menor_no(no.direita)
+                sucessor_chave = suc.chave
+                no.conta = suc.conta
+                no.direita = _rem_bst(no.direita, suc.chave)
+        no.atualizar_altura()
+        return no
+
+    raiz_copia_desb = copy.deepcopy(avl_store.raiz)
+    raiz_desb_obj = _rem_bst(raiz_copia_desb, numero_conta)
+    if raiz_desb_obj is not None:
+        _recalcular_alturas(raiz_desb_obj)
+    desbalanceada_snap = serializar_no_avl(raiz_desb_obj)
+
+    # 2. Simulação com detecção de desbalanceamento e rotações
+    raiz_passo1_snap: Optional[Dict[str, Any]] = None
+    caso_detectado: Optional[str] = None
+    no_desb: Optional[int] = None
+    fb_desb: Optional[int] = None
+    no_prom: Optional[int] = None
+    filho_info: Optional[Dict[str, Any]] = None
+
+    tree_container = {"root": copy.deepcopy(raiz_desb_obj)}
+
+    def _sim_rec(no: Any) -> Any:
+        nonlocal raiz_passo1_snap, caso_detectado, no_desb, fb_desb, no_prom, filho_info
+        if no is None:
+            return None
+
+        no.esquerda = _sim_rec(no.esquerda)
+        no.direita = _sim_rec(no.direita)
+
+        no.atualizar_altura()
+        fb = no.fator_balanceamento
+
+        if fb > 1:
+            if no_desb is None:
+                no_desb = no.chave
+                fb_desb = fb
+            if no.esquerda is not None and no.esquerda.fator_balanceamento >= 0:
+                if caso_detectado is None:
+                    caso_detectado = "CASO LL"
+                k2 = no
+                k1 = k2.esquerda
+                if no_prom is None:
+                    no_prom = k1.chave
+                k2.esquerda = k1.direita
+                k1.direita = k2
+                k2.atualizar_altura()
+                k1.atualizar_altura()
+                return k1
+            else:
+                if caso_detectado is None:
+                    caso_detectado = "CASO LR"
+                k3 = no
+                k1 = k3.esquerda
+                k2 = k1.direita
+                if no_prom is None:
+                    no_prom = k2.chave
+                if filho_info is None:
+                    filho_info = {"lado": "Esquerdo", "chave": k1.chave, "fb": k1.fator_balanceamento}
+
+                # Passo 1: rotação simples à esquerda no filho k1
+                k1.direita = k2.esquerda
+                k2.esquerda = k1
+                k1.atualizar_altura()
+                k2.atualizar_altura()
+                k3.esquerda = k2
+                k3.atualizar_altura()
+
+                # Snapshot intermediário
+                if raiz_passo1_snap is None:
+                    _recalcular_alturas(tree_container["root"])
+                    raiz_passo1_snap = serializar_no_avl(tree_container["root"])
+
+                # Passo 2: rotação simples à direita no ancestral k3
+                k3.esquerda = k2.direita
+                k2.direita = k3
+                k3.atualizar_altura()
+                k2.atualizar_altura()
+                return k2
+        elif fb < -1:
+            if no_desb is None:
+                no_desb = no.chave
+                fb_desb = fb
+            if no.direita is not None and no.direita.fator_balanceamento <= 0:
+                if caso_detectado is None:
+                    caso_detectado = "CASO RR"
+                k1 = no
+                k2 = k1.direita
+                if no_prom is None:
+                    no_prom = k2.chave
+                k1.direita = k2.esquerda
+                k2.esquerda = k1
+                k1.atualizar_altura()
+                k2.atualizar_altura()
+                return k2
+            else:
+                if caso_detectado is None:
+                    caso_detectado = "CASO RL"
+                k1 = no
+                k3 = k1.direita
+                k2 = k3.esquerda
+                if no_prom is None:
+                    no_prom = k2.chave
+                if filho_info is None:
+                    filho_info = {"lado": "Direito", "chave": k3.chave, "fb": k3.fator_balanceamento}
+
+                # Passo 1: rotação simples à direita no filho k3
+                k3.esquerda = k2.direita
+                k2.direita = k3
+                k3.atualizar_altura()
+                k2.atualizar_altura()
+                k1.direita = k2
+                k1.atualizar_altura()
+
+                # Snapshot intermediário
+                if raiz_passo1_snap is None:
+                    _recalcular_alturas(tree_container["root"])
+                    raiz_passo1_snap = serializar_no_avl(tree_container["root"])
+
+                # Passo 2: rotação simples à esquerda no ancestral k1
+                k1.direita = k2.esquerda
+                k2.esquerda = k1
+                k1.atualizar_altura()
+                k2.atualizar_altura()
+                return k2
+        return no
+
+    tree_container["root"] = _sim_rec(tree_container["root"])
+    if tree_container["root"] is not None:
+        _recalcular_alturas(tree_container["root"])
+    final_snap = serializar_no_avl(tree_container["root"])
+
+    return {
+        "antes": serializar_no_avl(avl_store.raiz),
+        "desbalanceada": desbalanceada_snap,
+        "passo1": raiz_passo1_snap,
+        "final": final_snap,
+        "caso": caso_detectado,
+        "no_desbalanceado": no_desb,
+        "fb_detectado": fb_desb,
+        "filho": filho_info,
+        "no_promovido": no_prom,
+        "grau": grau_removido,
+        "sucessor": sucessor_chave
+    }
+
+
 def gerar_arvore_rb_sem_fixup(rb_store: Any, conta: Any) -> Any:
     passos = simular_passos_completos_rb(rb_store, conta)
     if passos and passos[0].get("arvore"):
@@ -496,15 +699,26 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
     y_cor_original = y.cor
     z_cor_original = z.cor
 
-    if z.esquerda == nil:
-        x: Any = z.direita
+    if z.esquerda == nil and z.direita == nil:
+        x = nil
+        rb._transplant(z, nil)
+        passos.append({
+            "fase": "desconexao",
+            "arvore": serializar_no_rb(rb.raiz, nil),
+            "no_foco": None,
+            "titulo": "Desconexão do Nó Folha",
+            "descricao": f"Conta #{numero_conta} era nó folha (grau 0) e foi desconectada diretamente da árvore.",
+            "status": "warning"
+        })
+    elif z.esquerda == nil:
+        x = z.direita
         rb._transplant(z, z.direita)
         passos.append({
             "fase": "desconexao",
             "arvore": serializar_no_rb(rb.raiz, nil),
             "no_foco": x.chave if x != nil else None,
-            "titulo": "Desconexão do Nó",
-            "descricao": f"Conta #{numero_conta} desconectada da árvore. Filho direito assumiu a posição.",
+            "titulo": "Desconexão do Nó (Grau 1)",
+            "descricao": f"Conta #{numero_conta} possuía 1 filho (grau 1). Filho direito #{x.chave if x != nil else ''} assumiu a posição.",
             "status": "warning"
         })
     elif z.direita == nil:
@@ -514,8 +728,8 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
             "fase": "desconexao",
             "arvore": serializar_no_rb(rb.raiz, nil),
             "no_foco": x.chave if x != nil else None,
-            "titulo": "Desconexão do Nó",
-            "descricao": f"Conta #{numero_conta} desconectada da árvore. Filho esquerdo assumiu a posição.",
+            "titulo": "Desconexão do Nó (Grau 1)",
+            "descricao": f"Conta #{numero_conta} possuía 1 filho (grau 1). Filho esquerdo #{x.chave if x != nil else ''} assumiu a posição.",
             "status": "warning"
         })
     else:
@@ -775,24 +989,39 @@ def extrair_diagnostico_rebalanceamento(
             # Passo 1: Estado Inicial
             passos_avl.append({
                 "ordem": 1,
-                "titulo": "1. Árvore Inicial",
-                "descricao": f"Estrutura da AVL estável antes da inserção da Conta #{chave}.",
+                "titulo": "1. Estrutura Antes da Remoção" if tipo_op == "REMOCAO" else "1. Árvore Inicial",
+                "descricao": f"Árvore AVL estável com a Conta #{chave} cadastrada." if tipo_op == "REMOCAO" else f"Estrutura da AVL estável antes da inserção da Conta #{chave}.",
                 "arvore": snapshots_avl.get("antes") if snapshots_avl else None,
-                "no_foco": None,
+                "no_foco": chave if tipo_op == "REMOCAO" else None,
                 "status": "info"
             })
 
-            # Passo 2: Inserção do Nó & Desbalanceamento Crítico
+            # Passo 2: Remoção / Inserção & Desbalanceamento Crítico
             lado_str = f"filho {filho_lado.lower()} #{filho_chave}" if (filho_lado and filho_chave) else "filho"
             fb_filho_str = f" com FB={filho_fb}" if filho_fb else ""
-            desc_p2 = (
-                f"Ao inserir a Conta #{chave}, o nó ancestral #{avl_diag['no_desbalanceado']} atingiu "
-                f"FB={avl_diag['fb_detectado']} (|FB| ≥ 2) e seu {lado_str}{fb_filho_str} possui sinal oposto, "
-                f"formando o zigue-zague característico do {avl_diag['caso']}. Necessita de rotação dupla em duas etapas."
-            )
+            if tipo_op == "REMOCAO":
+                desc_sub = (
+                    f"Ao encerrar a Conta #{chave} (grau 2), o sucessor em-ordem #{snapshots_avl.get('sucessor')} assumiu sua posição. "
+                    if (snapshots_avl and snapshots_avl.get("grau") == 2 and snapshots_avl.get("sucessor"))
+                    else f"Após o encerramento da Conta #{chave}, a desconexão do nó reduziu a altura da subárvore. "
+                )
+                desc_p2 = (
+                    f"{desc_sub}O nó ancestral #{avl_diag['no_desbalanceado']} atingiu FB={avl_diag['fb_detectado']} (|FB| ≥ 2) "
+                    f"e seu {lado_str}{fb_filho_str} possui sinal oposto, configurando o {avl_diag['caso']}. "
+                    f"Necessita de rotação dupla em duas etapas para restaurar o equilíbrio."
+                )
+                titulo_p2 = "2. Desconexão & Desbalanceamento"
+            else:
+                desc_p2 = (
+                    f"Ao inserir a Conta #{chave}, o nó ancestral #{avl_diag['no_desbalanceado']} atingiu "
+                    f"FB={avl_diag['fb_detectado']} (|FB| ≥ 2) e seu {lado_str}{fb_filho_str} possui sinal oposto, "
+                    f"formando o zigue-zague característico do {avl_diag['caso']}. Necessita de rotação dupla em duas etapas."
+                )
+                titulo_p2 = "2. Inserção & Desbalanceamento"
+
             passos_avl.append({
                 "ordem": 2,
-                "titulo": "2. Inserção & Desbalanceamento",
+                "titulo": titulo_p2,
                 "descricao": desc_p2,
                 "arvore": snapshots_avl.get("desbalanceada") if snapshots_avl else None,
                 "no_foco": avl_diag["no_desbalanceado"],
@@ -826,12 +1055,12 @@ def extrair_diagnostico_rebalanceamento(
             if "CASO LR" in avl_diag["caso"]:
                 desc_p4 = (
                     f"Passo 2 da Rotação Dupla: Rotação simples à direita no nó ancestral #{avl_diag['no_desbalanceado']}. "
-                    f"O nó #{avl_diag['no_promovido']} assume definitivamente a raiz local, equilibrando ambas as subárvores e reduzindo a altura."
+                    f"O nó #{avl_diag['no_promovido']} assume definitivamente a raiz local, equilibrando ambas as subárvores e restabelecendo as alturas."
                 )
             else:
                 desc_p4 = (
                     f"Passo 2 da Rotação Dupla: Rotação simples à esquerda no nó ancestral #{avl_diag['no_desbalanceado']}. "
-                    f"O nó #{avl_diag['no_promovido']} assume definitivamente a raiz local, equilibrando ambas as subárvores e reduzindo a altura."
+                    f"O nó #{avl_diag['no_promovido']} assume definitivamente a raiz local, equilibrando ambas as subárvores e restabelecendo as alturas."
                 )
             passos_avl.append({
                 "ordem": 4,
@@ -855,26 +1084,46 @@ def extrair_diagnostico_rebalanceamento(
             # 4 Passos para Rotação Simples (LL / RR)
             passos_avl.append({
                 "ordem": 1,
-                "titulo": "1. Árvore Inicial",
-                "descricao": f"Estrutura da AVL estável antes da inserção da Conta #{chave}.",
+                "titulo": "1. Estrutura Antes da Remoção" if tipo_op == "REMOCAO" else "1. Árvore Inicial",
+                "descricao": f"Árvore AVL estável com a Conta #{chave} cadastrada." if tipo_op == "REMOCAO" else f"Estrutura da AVL estável antes da inserção da Conta #{chave}.",
                 "arvore": snapshots_avl.get("antes") if snapshots_avl else None,
-                "no_foco": None,
+                "no_foco": chave if tipo_op == "REMOCAO" else None,
                 "status": "info"
             })
 
+            if tipo_op == "REMOCAO":
+                desc_sub = (
+                    f"Ao encerrar a Conta #{chave} (grau 2), o sucessor em-ordem #{snapshots_avl.get('sucessor')} assumiu sua posição física. "
+                    if (snapshots_avl and snapshots_avl.get("grau") == 2 and snapshots_avl.get("sucessor"))
+                    else f"Ao encerrar a Conta #{chave}, a desconexão do nó reduziu a altura da subárvore. "
+                )
+                desc_p2 = (
+                    f"{desc_sub}A alteração estrutural fez com que o nó ancestral #{avl_diag['no_desbalanceado']} "
+                    f"atingisse FB={avl_diag['fb_detectado']} (|FB| ≥ 2). Configura-se o {avl_diag['caso']}, necessitando de {avl_diag['tipo_rotacao']}."
+                )
+                titulo_p2 = "2. Desconexão & Desbalanceamento"
+            else:
+                desc_p2 = f"Ao inserir a Conta #{chave}, o nó ancestral #{avl_diag['no_desbalanceado']} atingiu FB={avl_diag['fb_detectado']} (|FB| ≥ 2). Configura-se o {avl_diag['caso']}, necessitando de {avl_diag['tipo_rotacao']}."
+                titulo_p2 = "2. Inserção & Desbalanceamento"
+
             passos_avl.append({
                 "ordem": 2,
-                "titulo": "2. Inserção & Desbalanceamento",
-                "descricao": f"Ao inserir a Conta #{chave}, o nó ancestral #{avl_diag['no_desbalanceado']} atingiu FB={avl_diag['fb_detectado']} (|FB| ≥ 2). Configura-se o {avl_diag['caso']}, necessitando de {avl_diag['tipo_rotacao']}.",
+                "titulo": titulo_p2,
+                "descricao": desc_p2,
                 "arvore": snapshots_avl.get("desbalanceada") if snapshots_avl else None,
                 "no_foco": avl_diag["no_desbalanceado"],
                 "status": "warning"
             })
 
+            desc_p3 = (
+                f"{avl_diag['tipo_rotacao']} executada com sucesso. O nó #{avl_diag['no_promovido']} assume a posição de nova raiz local, recompondo o equilíbrio e a altura das subárvores."
+                if tipo_op == "REMOCAO"
+                else f"{avl_diag['tipo_rotacao']} executada. O nó #{avl_diag['no_promovido']} assume a posição de nova raiz local, reduzindo a altura e equilibrando as subárvores."
+            )
             passos_avl.append({
                 "ordem": 3,
                 "titulo": "3. Rebalanceamento por Rotação",
-                "descricao": f"{avl_diag['tipo_rotacao']} executada. O nó #{avl_diag['no_promovido']} assume a posição de nova raiz local, reduzindo a altura e equilibrando as subárvores.",
+                "descricao": desc_p3,
                 "arvore": snapshots_avl.get("final") if snapshots_avl else None,
                 "no_foco": avl_diag["no_promovido"],
                 "status": "success"
@@ -891,10 +1140,20 @@ def extrair_diagnostico_rebalanceamento(
 
         avl_diag["passos"] = passos_avl
 
-    elif "[REMOCAO AVL" in texto_avl:
+    elif "[REMOCAO AVL" in texto_avl or (tipo_op == "REMOCAO" and chave > 0):
         m_caso_rem = re.search(r"\[REMOCAO AVL - (CASO \d+:[^\]]+)\]", texto_avl)
-        caso_desc = m_caso_rem.group(1).strip() if m_caso_rem else "Remoção em nó"
+        caso_desc = m_caso_rem.group(1).strip() if m_caso_rem else "Remoção Direta"
         avl_diag["caso"] = caso_desc
+
+        if snapshots_avl and snapshots_avl.get("grau") == 2 and snapshots_avl.get("sucessor"):
+            desc_p2 = f"Conta #{chave} possuía 2 filhos (grau 2). O sucessor em-ordem #{snapshots_avl['sucessor']} assumiu a posição física do nó excluído."
+        elif snapshots_avl and snapshots_avl.get("grau") == 1:
+            desc_p2 = f"Conta #{chave} possuía 1 filho (grau 1), que assumiu a posição do nó excluído."
+        elif snapshots_avl and snapshots_avl.get("grau") == 0:
+            desc_p2 = f"Conta #{chave} era nó folha (grau 0) e foi desconectada diretamente da árvore."
+        else:
+            desc_p2 = f"Conta #{chave} encerrada: {caso_desc}."
+
         avl_diag["passos"] = [
             {
                 "ordem": 1,
@@ -906,36 +1165,16 @@ def extrair_diagnostico_rebalanceamento(
             },
             {
                 "ordem": 2,
-                "titulo": "2. Desconexão / Substituição",
-                "descricao": f"Conta #{chave} encerrada: {caso_desc}.",
-                "arvore": snapshots_avl.get("final") if snapshots_avl else None,
-                "no_foco": None,
+                "titulo": "2. Desconexão do Nó",
+                "descricao": desc_p2,
+                "arvore": snapshots_avl.get("desbalanceada") if (snapshots_avl and snapshots_avl.get("desbalanceada")) else (snapshots_avl.get("final") if snapshots_avl else None),
+                "no_foco": snapshots_avl.get("sucessor") if snapshots_avl else None,
                 "status": "warning"
             },
             {
                 "ordem": 3,
                 "titulo": "3. Árvore Resultante Equilibrada",
-                "descricao": "Alturas e balanceamento recalculados após encerramento da conta.",
-                "arvore": snapshots_avl.get("final") if snapshots_avl else None,
-                "no_foco": None,
-                "status": "success"
-            }
-        ]
-    elif tipo_op == "REMOCAO" and chave > 0:
-        avl_diag["caso"] = "Remoção Direta"
-        avl_diag["passos"] = [
-            {
-                "ordem": 1,
-                "titulo": "1. Estrutura Antes da Remoção",
-                "descricao": f"Árvore AVL com a Conta #{chave} cadastrada.",
-                "arvore": snapshots_avl.get("antes") if snapshots_avl else None,
-                "no_foco": chave,
-                "status": "info"
-            },
-            {
-                "ordem": 2,
-                "titulo": "2. Conta Encerrada",
-                "descricao": f"Conta #{chave} removida. Os fatores de balanceamento mantiveram-se dentro do limite (|FB| ≤ 1).",
+                "descricao": "Alturas e fatores de balanceamento recalculados após encerramento da conta. Todos os nós mantiveram |FB| ≤ 1, sem necessidade de rotação.",
                 "arvore": snapshots_avl.get("final") if snapshots_avl else None,
                 "no_foco": None,
                 "status": "success"
@@ -1393,6 +1632,7 @@ def rota_remover_conta(req: OperacaoChaveRequest):
     raiz_antes_avl = serializar_no_avl(store.avl.raiz)
     raiz_antes_rb = serializar_no_rb(store.rb.raiz, store.rb.NIL)
 
+    passos_simulados_avl = simular_passos_remocao_avl(store.avl, req.numero_conta)
     passos_simulados_rb = simular_passos_remocao_rb(store.rb, req.numero_conta)
 
     rem_avl = store.avl.remover(req.numero_conta)
@@ -1405,7 +1645,16 @@ def rota_remover_conta(req: OperacaoChaveRequest):
 
     snapshots_avl = {
         "antes": raiz_antes_avl,
-        "final": raiz_final_avl
+        "desbalanceada": passos_simulados_avl.get("desbalanceada"),
+        "passo1": passos_simulados_avl.get("passo1"),
+        "final": raiz_final_avl,
+        "caso": passos_simulados_avl.get("caso"),
+        "no_desbalanceado": passos_simulados_avl.get("no_desbalanceado"),
+        "fb_detectado": passos_simulados_avl.get("fb_detectado"),
+        "filho": passos_simulados_avl.get("filho"),
+        "no_promovido": passos_simulados_avl.get("no_promovido"),
+        "grau": passos_simulados_avl.get("grau"),
+        "sucessor": passos_simulados_avl.get("sucessor")
     }
     snapshots_rb = {
         "antes": raiz_antes_rb,
