@@ -782,13 +782,21 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
                 if w.cor.value == "VERMELHO":
                     w.cor = cor_p
                     x.pai.cor = cor_v
-                    rb._rotacao_esquerda(x.pai)
                     passos.append({
-                        "fase": "fixup_caso1",
+                        "fase": "fixup_caso1_recoloracao",
                         "arvore": serializar_no_rb(rb.raiz, nil),
                         "no_foco": w.chave if w != nil else None,
-                        "titulo": "Fixup Caso 1: Rotação no Pai & Recoloração do Irmão",
-                        "descricao": f"Irmão #{w.chave if w != nil else 'NIL'} era VERMELHO. Rotação à esquerda no Pai #{x.pai.chave} e inversão de cores para transformar em irmão preto.",
+                        "titulo": "Fixup Caso 1: Inversão de Cores (Irmão Vermelho)",
+                        "descricao": f"Irmão #{w.chave if w != nil else 'NIL'} é VERMELHO. Inversão cromática: Irmão passa a ser PRETO e Pai #{x.pai.chave} passa a ser VERMELHO.",
+                        "status": "warning"
+                    })
+                    rb._rotacao_esquerda(x.pai)
+                    passos.append({
+                        "fase": "fixup_caso1_rotacao",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": x.pai.chave if x.pai != nil else None,
+                        "titulo": "Fixup Caso 1: Rotação no Pai",
+                        "descricao": f"Rotação à esquerda no Pai #{x.pai.chave} para girar a estrutura e transformar a configuração em irmão preto.",
                         "status": "warning"
                     })
                     w = x.pai.direita
@@ -808,13 +816,21 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
                     if w.direita.cor.value == "PRETO":
                         w.esquerda.cor = cor_p
                         w.cor = cor_v
-                        rb._rotacao_direita(w)
                         passos.append({
-                            "fase": "fixup_caso3",
+                            "fase": "fixup_caso3_recoloracao",
                             "arvore": serializar_no_rb(rb.raiz, nil),
                             "no_foco": w.chave if w != nil else None,
-                            "titulo": "Fixup Caso 3: Rotação no Irmão (Zigue-Zague)",
-                            "descricao": f"Filho direito do irmão é PRETO e esquerdo é VERMELHO. Rotação à direita no Irmão #{w.chave} para alinhar no Caso 4.",
+                            "titulo": "Fixup Caso 3: Inversão de Cores no Irmão",
+                            "descricao": f"Caso 3 (Zigue-Zague): Filho esquerdo #{w.esquerda.chave if w.esquerda != nil else 'NIL'} passa a PRETO e Irmão #{w.chave} passa a VERMELHO.",
+                            "status": "warning"
+                        })
+                        rb._rotacao_direita(w)
+                        passos.append({
+                            "fase": "fixup_caso3_rotacao",
+                            "arvore": serializar_no_rb(rb.raiz, nil),
+                            "no_foco": w.chave if w != nil else None,
+                            "titulo": "Fixup Caso 3: Rotação no Irmão (Alinhamento em Linha Reta)",
+                            "descricao": f"Rotação à direita no Irmão #{w.chave} para transformar o zigue-zague em linha reta (Caso 4).",
                             "status": "warning"
                         })
                         w = x.pai.direita
@@ -822,15 +838,25 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
                     pai_ref: Any = x.pai
                     pai_cor_orig = pai_ref.cor
                     rb._rotacao_esquerda(pai_ref)
-                    w.cor = pai_cor_orig
-                    pai_ref.cor = cor_p
-                    w.direita.cor = cor_p
                     passos.append({
-                        "fase": "fixup_caso4",
+                        "fase": "fixup_caso4_rotacao",
                         "arvore": serializar_no_rb(rb.raiz, nil),
                         "no_foco": w.chave if w != nil else None,
-                        "titulo": "Fixup Caso 4: Rotação no Pai & Ajuste de Cores",
-                        "descricao": f"Filho direito do irmão é VERMELHO. Rotação à esquerda no Pai #{pai_ref.chave} e absorção da dupla-preta.",
+                        "titulo": "Fixup Caso 4: Rotação Estrutural no Pai (Cores Mantidas)",
+                        "descricao": f"Caso 4: Filho direito do irmão é VERMELHO. Rotação simples à esquerda no Pai #{pai_ref.chave}. O nó #{w.chave if w != nil else ''} sobe para a raiz local. Observação didática: as cores dos nós são mantidas antes do ajuste cromático.",
+                        "status": "warning"
+                    })
+                    w.cor = pai_cor_orig
+                    pai_ref.cor = cor_p
+                    filho_ext_k = w.direita.chave if (w != nil and w.direita != nil) else None
+                    if w != nil and w.direita != nil:
+                        w.direita.cor = cor_p
+                    passos.append({
+                        "fase": "fixup_caso4_recoloracao",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": filho_ext_k,
+                        "titulo": "Fixup Caso 4: Recoloração & Absorção da Dupla-Preta",
+                        "descricao": f"Ajuste cromático de Cormen: Filho externo #{filho_ext_k} é RECOLORIDO de VERMELHO para PRETO (absorvendo a dupla-preta). Pai #{pai_ref.chave} passa a PRETO e Irmão #{w.chave if w != nil else ''} assume a cor original do pai ({pai_cor_orig.value}).",
                         "status": "success"
                     })
                     x = rb.raiz
@@ -839,13 +865,21 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
                 if w.cor.value == "VERMELHO":
                     w.cor = cor_p
                     x.pai.cor = cor_v
-                    rb._rotacao_direita(x.pai)
                     passos.append({
-                        "fase": "fixup_caso1",
+                        "fase": "fixup_caso1_recoloracao",
                         "arvore": serializar_no_rb(rb.raiz, nil),
                         "no_foco": w.chave if w != nil else None,
-                        "titulo": "Fixup Caso 1: Rotação no Pai & Recoloração do Irmão",
-                        "descricao": f"Irmão #{w.chave if w != nil else 'NIL'} era VERMELHO. Rotação à direita no Pai #{x.pai.chave} e inversão de cores.",
+                        "titulo": "Fixup Caso 1: Inversão de Cores (Irmão Vermelho)",
+                        "descricao": f"Irmão #{w.chave if w != nil else 'NIL'} é VERMELHO. Inversão cromática: Irmão passa a ser PRETO e Pai #{x.pai.chave} passa a ser VERMELHO.",
+                        "status": "warning"
+                    })
+                    rb._rotacao_direita(x.pai)
+                    passos.append({
+                        "fase": "fixup_caso1_rotacao",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": x.pai.chave if x.pai != nil else None,
+                        "titulo": "Fixup Caso 1: Rotação no Pai",
+                        "descricao": f"Rotação à direita no Pai #{x.pai.chave} para girar a estrutura e transformar a configuração em irmão preto.",
                         "status": "warning"
                     })
                     w = x.pai.esquerda
@@ -865,13 +899,21 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
                     if w.esquerda.cor.value == "PRETO":
                         w.direita.cor = cor_p
                         w.cor = cor_v
-                        rb._rotacao_esquerda(w)
                         passos.append({
-                            "fase": "fixup_caso3",
+                            "fase": "fixup_caso3_recoloracao",
                             "arvore": serializar_no_rb(rb.raiz, nil),
                             "no_foco": w.chave if w != nil else None,
-                            "titulo": "Fixup Caso 3: Rotação no Irmão (Zigue-Zague)",
-                            "descricao": f"Filho esquerdo do irmão é PRETO e direito é VERMELHO. Rotação à esquerda no Irmão #{w.chave} para alinhar no Caso 4.",
+                            "titulo": "Fixup Caso 3: Inversão de Cores no Irmão",
+                            "descricao": f"Caso 3 (Zigue-Zague): Filho direito #{w.direita.chave if w.direita != nil else 'NIL'} passa a PRETO e Irmão #{w.chave} passa a VERMELHO.",
+                            "status": "warning"
+                        })
+                        rb._rotacao_esquerda(w)
+                        passos.append({
+                            "fase": "fixup_caso3_rotacao",
+                            "arvore": serializar_no_rb(rb.raiz, nil),
+                            "no_foco": w.chave if w != nil else None,
+                            "titulo": "Fixup Caso 3: Rotação no Irmão (Alinhamento em Linha Reta)",
+                            "descricao": f"Rotação à esquerda no Irmão #{w.chave} para transformar o zigue-zague em linha reta (Caso 4).",
                             "status": "warning"
                         })
                         w = x.pai.esquerda
@@ -879,15 +921,25 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
                     pai_ref = x.pai
                     pai_cor_orig = pai_ref.cor
                     rb._rotacao_direita(pai_ref)
-                    w.cor = pai_cor_orig
-                    pai_ref.cor = cor_p
-                    w.esquerda.cor = cor_p
                     passos.append({
-                        "fase": "fixup_caso4",
+                        "fase": "fixup_caso4_rotacao",
                         "arvore": serializar_no_rb(rb.raiz, nil),
                         "no_foco": w.chave if w != nil else None,
-                        "titulo": "Fixup Caso 4: Rotação no Pai & Ajuste de Cores",
-                        "descricao": f"Filho esquerdo do irmão é VERMELHO. Rotação à direita no Pai #{pai_ref.chave} e absorção da dupla-preta.",
+                        "titulo": "Fixup Caso 4: Rotação Estrutural no Pai (Cores Mantidas)",
+                        "descricao": f"Caso 4: Filho esquerdo do irmão é VERMELHO. Rotação simples à direita no Pai #{pai_ref.chave}. O nó #{w.chave if w != nil else ''} sobe para a raiz local. Observação didática: as cores dos nós são mantidas antes do ajuste cromático.",
+                        "status": "warning"
+                    })
+                    w.cor = pai_cor_orig
+                    pai_ref.cor = cor_p
+                    filho_ext_k = w.esquerda.chave if (w != nil and w.esquerda != nil) else None
+                    if w != nil and w.esquerda != nil:
+                        w.esquerda.cor = cor_p
+                    passos.append({
+                        "fase": "fixup_caso4_recoloracao",
+                        "arvore": serializar_no_rb(rb.raiz, nil),
+                        "no_foco": filho_ext_k,
+                        "titulo": "Fixup Caso 4: Recoloração & Absorção da Dupla-Preta",
+                        "descricao": f"Ajuste cromático de Cormen: Filho externo #{filho_ext_k} é RECOLORIDO de VERMELHO para PRETO (absorvendo a dupla-preta). Pai #{pai_ref.chave} passa a PRETO e Irmão #{w.chave if w != nil else ''} assume a cor original do pai ({pai_cor_orig.value}).",
                         "status": "success"
                     })
                     x = rb.raiz
@@ -899,7 +951,7 @@ def simular_passos_remocao_rb(rb_store: Any, numero_conta: int) -> List[Dict[str
                 "arvore": serializar_no_rb(rb.raiz, nil),
                 "no_foco": x.chave if x != nil else None,
                 "titulo": "Fixação de Nó Preto",
-                "descricao": "Nó x recolorido para PRETO para absorver a dupla-preta final.",
+                "descricao": f"Nó #{x.chave if x != nil else 'x'} recolorido para PRETO para absorver a dupla-preta final.",
                 "status": "success"
             })
 
