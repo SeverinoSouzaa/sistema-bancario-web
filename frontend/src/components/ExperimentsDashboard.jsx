@@ -251,19 +251,14 @@ export default function ExperimentsDashboard({
       <div className="bg-white border-b border-slate-200 px-6 py-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-20 shadow-2xs">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-              <Activity className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-xl bg-[#12372a]/10 border border-[#12372a]/20 text-[#12372a] flex items-center justify-center font-bold shadow-xs shrink-0">
+              <Activity className="w-5 h-5" />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-base font-semibold text-slate-900 leading-none">
-                  Laboratório de Análise Experimental de Desempenho
-                </h1>
-                <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 font-bold border border-indigo-200">
-                  Benchmark Comparativo
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">
+              <h1 className="text-base font-bold text-neutral-800 leading-none">
+                Laboratório de Análise Experimental de Desempenho
+              </h1>
+              <p className="text-xs text-neutral-500 mt-1">
                 Benchmarks científicos com execução dinâmica e determinística (seed = 42)
               </p>
             </div>
@@ -276,7 +271,7 @@ export default function ExperimentsDashboard({
           {onBackToTrees && (
             <button
               onClick={onBackToTrees}
-              className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 font-medium shadow-2xs"
+              className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-neutral-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 font-medium shadow-2xs cursor-pointer"
             >
               <Layers className="w-3.5 h-3.5 text-slate-500" />
               <span>Voltar às Árvores</span>
@@ -287,9 +282,9 @@ export default function ExperimentsDashboard({
           <button
             onClick={() => handleExport('csv')}
             disabled={exporting || availableSizes.length === 0}
-            className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 font-medium shadow-2xs disabled:opacity-50"
+            className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-neutral-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 font-medium shadow-2xs disabled:opacity-50 cursor-pointer"
           >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+            <FileSpreadsheet className="w-3.5 h-3.5 text-[#12372a]" />
             <span>Exportar CSV</span>
           </button>
 
@@ -297,9 +292,9 @@ export default function ExperimentsDashboard({
           <button
             onClick={() => handleExport('markdown')}
             disabled={exporting || availableSizes.length === 0}
-            className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 font-medium shadow-2xs disabled:opacity-50"
+            className="text-xs px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-neutral-700 hover:bg-slate-50 transition-colors flex items-center gap-1.5 font-medium shadow-2xs disabled:opacity-50 cursor-pointer"
           >
-            <FileText className="w-3.5 h-3.5 text-indigo-600" />
+            <FileText className="w-3.5 h-3.5 text-[#854d27]" />
             <span>Exportar Markdown</span>
           </button>
 
@@ -307,7 +302,7 @@ export default function ExperimentsDashboard({
           <button
             onClick={() => handleStartBatch(bateriaMode)}
             disabled={running}
-            className="text-xs px-3 py-1.5 rounded-lg bg-slate-900 text-white hover:bg-slate-800 transition-colors flex items-center gap-1.5 font-semibold shadow-xs disabled:opacity-50"
+            className="text-xs px-3.5 py-1.5 rounded-lg bg-[#12372a] text-white hover:bg-[#184535] active:bg-[#0b241c] transition-colors flex items-center gap-1.5 font-semibold shadow-xs disabled:opacity-50 cursor-pointer"
           >
             <RotateCcw className={`w-3.5 h-3.5 ${running ? 'animate-spin' : ''}`} />
             <span>{running ? 'Processando...' : 'Re-executar Testes'}</span>
@@ -319,19 +314,19 @@ export default function ExperimentsDashboard({
         {/* Empty State when no experiments have run yet */}
         {availableSizes.length === 0 && !running && (
           <div className="bg-white border border-slate-200 rounded-2xl p-12 text-center max-w-xl mx-auto shadow-xs my-8 space-y-4">
-            <div className="w-14 h-14 rounded-2xl bg-indigo-50 border border-indigo-100 text-indigo-600 flex items-center justify-center mx-auto shadow-2xs">
+            <div className="w-14 h-14 rounded-2xl bg-[#12372a]/10 border border-[#12372a]/20 text-[#12372a] flex items-center justify-center mx-auto shadow-2xs">
               <Activity className="w-7 h-7" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900">Nenhum experimento executado no momento</h3>
-              <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              <h3 className="text-base font-bold text-neutral-900">Nenhum experimento executado no momento</h3>
+              <p className="text-xs text-neutral-500 mt-1 max-w-sm mx-auto">
                 Selecione uma das opções no menu lateral ou clique no botão abaixo para iniciar a bateria de testes científicos com seed = 42.
               </p>
             </div>
             <div className="pt-2 flex justify-center gap-3">
               <button
                 onClick={() => handleStartBatch('padrao')}
-                className="text-xs px-4 py-2.5 rounded-xl bg-slate-900 text-white font-semibold hover:bg-slate-800 transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
+                className="text-xs px-4 py-2.5 rounded-xl bg-[#12372a] text-white font-semibold hover:bg-[#184535] active:bg-[#0b241c] transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
               >
                 <Play className="w-3.5 h-3.5" />
                 <span>Iniciar Bateria Completa (100, 1k, 10k)</span>
@@ -349,8 +344,6 @@ export default function ExperimentsDashboard({
                 {stepperQueue.map((nVal, idx) => {
                   const isDone = !!resultsBySize[nVal];
                   const isCurrent = nVal === selectedN;
-                  const isPending = !isDone && !running;
-                  const isNext = stepperPaused && idx === currentStepIndex;
 
                   return (
                     <React.Fragment key={nVal}>
@@ -359,22 +352,18 @@ export default function ExperimentsDashboard({
                         disabled={!isDone}
                         className={`flex items-center gap-2 px-3 py-1.5 rounded-lg border text-xs transition-all ${
                           isCurrent
-                            ? 'bg-slate-900 text-white border-slate-900 font-semibold shadow-2xs'
+                            ? 'bg-[#12372a] text-white border-[#12372a] font-semibold shadow-2xs'
                             : isDone
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200 font-medium hover:bg-emerald-100'
-                            : isNext
-                            ? 'bg-amber-50 text-amber-900 border-amber-300 font-semibold animate-pulse'
-                            : 'bg-slate-50 text-slate-400 border-slate-200'
+                            ? 'bg-slate-100/80 text-slate-600 border-slate-200/80 font-medium hover:bg-slate-100 hover:text-neutral-900 cursor-pointer'
+                            : 'bg-slate-100/60 text-slate-400 border-slate-200/60 font-medium cursor-default'
                         }`}
                       >
-                        {isDone ? (
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                        ) : isNext ? (
-                          <Clock className="w-3.5 h-3.5 text-amber-600" />
+                        {isDone && isCurrent ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-white" />
+                        ) : isDone ? (
+                          <CheckCircle2 className="w-3.5 h-3.5 text-slate-400" />
                         ) : (
-                          <span className="w-3.5 h-3.5 rounded-full border border-current text-[10px] flex items-center justify-center font-bold">
-                            {idx + 1}
-                          </span>
+                          <Clock className="w-3.5 h-3.5 text-slate-400" />
                         )}
                         <span>N = {nVal.toLocaleString()}</span>
                       </button>
@@ -388,19 +377,19 @@ export default function ExperimentsDashboard({
 
               {/* Safety Interlock Prompt Button */}
               {stepperPaused && currentStepIndex < stepperQueue.length && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <div className="text-right hidden md:block">
-                    <p className="text-xs font-semibold text-slate-800">
+                    <p className="text-xs font-semibold text-neutral-800">
                       Pausa de Segurança Ativa (Nielsen #5)
                     </p>
-                    <p className="text-[11px] text-slate-500">
+                    <p className="text-[11px] text-neutral-500">
                       Avalie os dados de N={stepperQueue[currentStepIndex - 1]?.toLocaleString()} antes de avançar.
                     </p>
                   </div>
                   <button
                     onClick={handleAdvanceStep}
                     disabled={running}
-                    className="text-xs px-4 py-2 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-all shadow-xs flex items-center gap-2 shrink-0"
+                    className="text-xs px-4 py-2 rounded-lg bg-[#12372a] hover:bg-[#184535] active:bg-[#0b241c] text-white font-semibold transition-all shadow-xs flex items-center gap-2 shrink-0 cursor-pointer"
                   >
                     <span>Prosseguir para N = {stepperQueue[currentStepIndex]?.toLocaleString()}</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -410,8 +399,8 @@ export default function ExperimentsDashboard({
 
               {/* Completed Message */}
               {!stepperPaused && currentStepIndex >= stepperQueue.length && (
-                <div className="flex items-center gap-2 text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg border border-emerald-200 text-xs font-semibold">
-                  <ShieldCheck className="w-4 h-4 text-emerald-600" />
+                <div className="flex items-center gap-2 text-[#12372a] bg-[#12372a]/10 px-3 py-1.5 rounded-lg border border-[#12372a]/20 text-xs font-semibold">
+                  <ShieldCheck className="w-4 h-4 text-[#12372a]" />
                   <span>Bateria de Experimentos 100% Concluída</span>
                 </div>
               )}
@@ -430,10 +419,10 @@ export default function ExperimentsDashboard({
               <button
                 key={nVal}
                 onClick={() => setSelectedN(nVal)}
-                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all ${
+                className={`text-xs px-3 py-1.5 rounded-lg font-medium transition-all cursor-pointer ${
                   selectedN === nVal
-                    ? 'bg-slate-900 text-white font-semibold shadow-xs'
-                    : 'bg-slate-100 text-slate-700 hover:bg-slate-200 border border-slate-200'
+                    ? 'bg-[#12372a] text-white font-semibold shadow-xs'
+                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200/80 border border-slate-200/80'
                 }`}
               >
                 N = {nVal.toLocaleString()}
@@ -442,23 +431,23 @@ export default function ExperimentsDashboard({
           </div>
 
           {/* Scenario Tab Selector (Tabela 1 vs Tabela 2) */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
+          <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-lg border border-slate-200 text-xs font-medium">
             <button
               onClick={() => setSelectedCenarioTab('aleatorio')}
-              className={`px-3 py-1.5 rounded-md transition-all ${
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                 selectedCenarioTab === 'aleatorio'
-                  ? 'bg-white text-slate-900 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-neutral-900 font-semibold shadow-xs border border-slate-200/60'
+                  : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
               Cenário Real Bancário (Tabela 1 - Aleatório)
             </button>
             <button
               onClick={() => setSelectedCenarioTab('crescente')}
-              className={`px-3 py-1.5 rounded-md transition-all ${
+              className={`px-3 py-1.5 rounded-md transition-all cursor-pointer ${
                 selectedCenarioTab === 'crescente'
-                  ? 'bg-white text-slate-900 font-semibold shadow-xs'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-neutral-900 font-semibold shadow-xs border border-slate-200/60'
+                  : 'text-neutral-600 hover:text-neutral-900'
               }`}
             >
               Pior Caso ABB (Tabela 2 - Ordem Crescente)
@@ -494,12 +483,12 @@ export default function ExperimentsDashboard({
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold font-mono text-slate-900">{activeData.avl_altura_final}</span>
+                <span className="text-2xl font-bold font-mono text-neutral-800">{activeData.avl_altura_final}</span>
                 <span className="text-xs text-slate-400">vs</span>
-                <span className="text-2xl font-bold font-mono text-rose-600">{activeData.rb_altura_final}</span>
+                <span className="text-2xl font-bold font-mono text-[#854d27]">{activeData.rb_altura_final}</span>
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-600">
-                <TrendingDown className="w-3.5 h-3.5 text-emerald-600" />
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600">
+                <TrendingDown className="w-3.5 h-3.5 text-[#12372a]" />
                 <span>
                   {activeData.avl_altura_final <= activeData.rb_altura_final
                     ? `AVL é ${activeData.rb_altura_final - activeData.avl_altura_final} níveis mais compacta`
@@ -517,19 +506,19 @@ export default function ExperimentsDashboard({
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold font-mono text-slate-900">
+                <span className="text-2xl font-bold font-mono text-neutral-800">
                   {activeData.avl_rot_ins.toLocaleString()}
                 </span>
                 <span className="text-xs text-slate-400">vs</span>
-                <span className="text-2xl font-bold font-mono text-rose-600">
+                <span className="text-2xl font-bold font-mono text-[#854d27]">
                   {activeData.rb_rot_ins.toLocaleString()}
                 </span>
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-600">
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-600">
                 {activeData.rb_rot_ins < activeData.avl_rot_ins ? (
                   <>
-                    <TrendingDown className="w-3.5 h-3.5 text-emerald-600" />
-                    <span className="text-emerald-700 font-medium">
+                    <TrendingDown className="w-3.5 h-3.5 text-[#12372a]" />
+                    <span className="text-[#12372a] font-semibold">
                       RN economizou {(100 - (activeData.rb_rot_ins / activeData.avl_rot_ins) * 100).toFixed(1)}% de rotações
                     </span>
                   </>
@@ -543,18 +532,18 @@ export default function ExperimentsDashboard({
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-xs relative overflow-hidden">
               <div className="flex items-center justify-between text-xs text-slate-500 font-medium mb-1">
                 <span>Recolorações (Rubro-Negra)</span>
-                <span className="text-[10px] px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-semibold border border-rose-200">
+                <span className="text-[10px] px-2 py-0.5 rounded bg-[#fcfaf7] text-[#854d27] font-semibold border border-[#854d27]/25 font-mono">
                   Exclusivo Cormen
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold font-mono text-rose-700">
+                <span className="text-2xl font-bold font-mono text-[#854d27]">
                   {activeData.rb_rec_ins.toLocaleString()}
                 </span>
-                <span className="text-xs text-slate-500">na inserção</span>
+                <span className="text-xs text-slate-500 font-medium">na inserção</span>
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-600">
-                <Info className="w-3.5 h-3.5 text-slate-400" />
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-500">
+                <Info className="w-3.5 h-3.5 text-[#854d27]" />
                 <span>Operações O(1) que substituem rotações</span>
               </div>
             </div>
@@ -568,16 +557,16 @@ export default function ExperimentsDashboard({
                 </span>
               </div>
               <div className="flex items-baseline gap-2 mt-1">
-                <span className="text-2xl font-bold font-mono text-slate-900">
+                <span className="text-2xl font-bold font-mono text-neutral-800">
                   {activeData.avl_media_busca.toFixed(2)}
                 </span>
                 <span className="text-xs text-slate-400">vs</span>
-                <span className="text-2xl font-bold font-mono text-rose-600">
+                <span className="text-2xl font-bold font-mono text-[#854d27]">
                   {activeData.rb_media_busca.toFixed(2)}
                 </span>
                 <span className="text-xs text-slate-500">nós</span>
               </div>
-              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-slate-600">
+              <div className="flex items-center gap-1.5 mt-2 text-[11px] text-neutral-500">
                 <Search className="w-3.5 h-3.5 text-slate-400" />
                 <span>
                   Existentes: {activeData.avl_media_busca_existente.toFixed(1)} vs {activeData.rb_media_busca_existente.toFixed(1)} nós
@@ -603,8 +592,8 @@ export default function ExperimentsDashboard({
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 font-medium border border-emerald-200 flex items-center gap-1">
-                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                <span className="text-xs px-2.5 py-1 rounded-full bg-[#12372a]/10 text-[#12372a] font-semibold border border-[#12372a]/20 flex items-center gap-1.5">
+                  <ShieldCheck className="w-3.5 h-3.5 text-[#12372a]" />
                   <span>Equivalência 100% Validada</span>
                 </span>
               </div>
@@ -617,7 +606,7 @@ export default function ExperimentsDashboard({
                   <tr className="border-b border-slate-200 bg-slate-50 text-slate-500 font-semibold uppercase text-[10px] tracking-wider">
                     <th className="py-3 px-6">Métrica de Desempenho</th>
                     <th className="py-3 px-6 text-right">Árvore AVL</th>
-                    <th className="py-3 px-6 text-right">Árvore Rubro-Negra</th>
+                    <th className="py-3 px-6 text-right text-[#854d27]">Árvore Rubro-Negra</th>
                     <th className="py-3 px-6 text-right">Diferencial Teórico</th>
                   </tr>
                 </thead>
@@ -625,10 +614,10 @@ export default function ExperimentsDashboard({
                   {/* Linha 1 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Altura final (Após Inserção)</td>
-                    <td className="py-3 px-6 text-right font-mono font-semibold text-slate-900">
+                    <td className="py-3 px-6 text-right font-mono font-semibold text-neutral-800">
                       {activeData.avl_altura_final}
                     </td>
-                    <td className="py-3 px-6 text-right font-mono font-semibold text-rose-700">
+                    <td className="py-3 px-6 text-right font-mono font-semibold text-[#854d27]">
                       {activeData.rb_altura_final}
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 font-mono text-[11px]">
@@ -641,13 +630,13 @@ export default function ExperimentsDashboard({
                   {/* Linha 2 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Rotações na inserção</td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800">
                       {activeData.avl_rot_ins.toLocaleString()}
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700 font-semibold">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27] font-semibold">
                       {activeData.rb_rot_ins.toLocaleString()}
                     </td>
-                    <td className="py-3 px-6 text-right text-emerald-700 font-medium text-[11px]">
+                    <td className="py-3 px-6 text-right text-[#12372a] font-semibold text-[11px]">
                       {activeData.rb_rot_ins <= activeData.avl_rot_ins
                         ? `RN economizou ${activeData.avl_rot_ins - activeData.rb_rot_ins} rotações`
                         : `AVL menor`}
@@ -657,10 +646,10 @@ export default function ExperimentsDashboard({
                   {/* Linha 3 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Rotações na remoção (10% dos nós)</td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800">
                       {activeData.avl_rot_rem_10.toLocaleString()}
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27]">
                       {activeData.rb_rot_rem_10.toLocaleString()}
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 text-[11px]">
@@ -674,14 +663,14 @@ export default function ExperimentsDashboard({
                   <tr className="bg-slate-50/40 hover:bg-slate-50 transition-colors font-medium">
                     <td className="py-3 px-6 text-slate-900 flex items-center gap-1.5">
                       <span>Rotações na remoção (30% dos nós)</span>
-                      <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-800 font-semibold">
+                      <span className="text-[9px] uppercase px-1.5 py-0.2 rounded bg-slate-100 text-slate-700 border border-slate-200 font-semibold font-mono">
                         Amostra 30%
                       </span>
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900 font-semibold">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800 font-semibold">
                       {activeData.avl_rot_rem_30.toLocaleString()}
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700 font-semibold">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27] font-semibold">
                       {activeData.rb_rot_rem_30.toLocaleString()}
                     </td>
                     <td className="py-3 px-6 text-right text-slate-600 text-[11px]">
@@ -694,10 +683,10 @@ export default function ExperimentsDashboard({
                   {/* Linha 5 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Rotações na remoção (50% dos nós)</td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800">
                       {activeData.avl_rot_rem_50.toLocaleString()}
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27]">
                       {activeData.rb_rot_rem_50.toLocaleString()}
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 text-[11px]">
@@ -711,10 +700,10 @@ export default function ExperimentsDashboard({
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Recolorações (Inserção)</td>
                     <td className="py-3 px-6 text-right font-mono text-slate-400">N/A (Não se aplica)</td>
-                    <td className="py-3 px-6 text-right font-mono font-bold text-rose-700">
+                    <td className="py-3 px-6 text-right font-mono font-bold text-[#854d27]">
                       {activeData.rb_rec_ins.toLocaleString()}
                     </td>
-                    <td className="py-3 px-6 text-right text-rose-600 text-[11px] font-medium">
+                    <td className="py-3 px-6 text-right text-[#854d27] text-[11px] font-medium">
                       Compensação de cor O(1)
                     </td>
                   </tr>
@@ -723,7 +712,7 @@ export default function ExperimentsDashboard({
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Recolorações (Remoção 30% dos nós)</td>
                     <td className="py-3 px-6 text-right font-mono text-slate-400">N/A (Não se aplica)</td>
-                    <td className="py-3 px-6 text-right font-mono font-bold text-rose-700">
+                    <td className="py-3 px-6 text-right font-mono font-bold text-[#854d27]">
                       {activeData.rb_rec_rem_30.toLocaleString()}
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 text-[11px]">
@@ -734,10 +723,10 @@ export default function ExperimentsDashboard({
                   {/* Linha 8 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Total de nós visitados na busca</td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900 font-semibold">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800 font-semibold">
                       {activeData.avl_total_nos_busca.toLocaleString()}
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700 font-semibold">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27] font-semibold">
                       {activeData.rb_total_nos_busca.toLocaleString()}
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 text-[11px]">
@@ -748,10 +737,10 @@ export default function ExperimentsDashboard({
                   {/* Linha 9 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Média de nós visitados por busca</td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900 font-bold">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800 font-bold">
                       {activeData.avl_media_busca.toFixed(2)}
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700 font-bold">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27] font-bold">
                       {activeData.rb_media_busca.toFixed(2)}
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 text-[11px]">
@@ -762,10 +751,10 @@ export default function ExperimentsDashboard({
                   {/* Linha 10 (Tempos) */}
                   <tr className="hover:bg-slate-50/70 transition-colors bg-slate-50/30">
                     <td className="py-3 px-6 font-medium text-slate-800">Tempo total de inserção (ms)</td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800">
                       {activeData.avl_tempo_ins_ms.toFixed(3)} ms
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27]">
                       {activeData.rb_tempo_ins_ms.toFixed(3)} ms
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 text-[11px]">
@@ -776,10 +765,10 @@ export default function ExperimentsDashboard({
                   {/* Linha 11 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Tempo total de busca (ms)</td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800">
                       {activeData.avl_tempo_busca_ms.toFixed(3)} ms
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27]">
                       {activeData.rb_tempo_busca_ms.toFixed(3)} ms
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 text-[11px]">
@@ -790,10 +779,10 @@ export default function ExperimentsDashboard({
                   {/* Linha 12 */}
                   <tr className="hover:bg-slate-50/70 transition-colors">
                     <td className="py-3 px-6 font-medium text-slate-800">Tempo total remoção (30% dos nós)</td>
-                    <td className="py-3 px-6 text-right font-mono text-slate-900">
+                    <td className="py-3 px-6 text-right font-mono text-neutral-800">
                       {activeData.avl_tempo_rem_30_ms.toFixed(3)} ms
                     </td>
-                    <td className="py-3 px-6 text-right font-mono text-rose-700">
+                    <td className="py-3 px-6 text-right font-mono text-[#854d27]">
                       {activeData.rb_tempo_rem_30_ms.toFixed(3)} ms
                     </td>
                     <td className="py-3 px-6 text-right text-slate-500 text-[11px]">
@@ -806,232 +795,392 @@ export default function ExperimentsDashboard({
           </div>
         )}
 
-        {/* ================= SECTION: VISUAL COMPARATIVE CHARTS ================= */}
-        {activeData && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Chart 1: Rotações de Inserção vs Remoção */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
-                  Distribuição Comparativa de Rotações
-                </h4>
-                <div className="flex items-center gap-3 text-[11px]">
-                  <span className="flex items-center gap-1.5 font-medium text-slate-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-slate-900" /> AVL
+        {/* ================= SECTION: VISUAL COMPARATIVE CHARTS (Executive Apple/Twinize Style) ================= */}
+        {activeData && (() => {
+          // Calculations for Donut Chart (Rubro-Negra Operations Distribution)
+          const totalOps =
+            (activeData.rb_rec_ins || 0) +
+            (activeData.rb_rec_rem_30 || 0) +
+            (activeData.rb_rot_ins || 0) +
+            (activeData.rb_rot_rem_30 || 0) || 1;
+
+          const recInsPct = (activeData.rb_rec_ins || 0) / totalOps;
+          const recRemPct = (activeData.rb_rec_rem_30 || 0) / totalOps;
+          const rotInsPct = (activeData.rb_rot_ins || 0) / totalOps;
+          const rotRemPct = (activeData.rb_rot_rem_30 || 0) / totalOps;
+
+          const radius = 38;
+          const circumference = 2 * Math.PI * radius; // ~238.76
+          const strokeWidth = 14;
+
+          const off0 = 0;
+          const off1 = recInsPct * circumference;
+          const off2 = (recInsPct + recRemPct) * circumference;
+          const off3 = (recInsPct + recRemPct + rotInsPct) * circumference;
+
+          return (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              {/* Left Column (7 cols): Comparative Bar Charts (Rotations & Execution Times) */}
+              <div className="lg:col-span-7 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <h4 className="text-sm font-bold text-neutral-800">
+                      Distribuição Comparativa de Desempenho
+                    </h4>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Contraste direto entre AVL e Rubro-Negra por fase operacional
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs">
+                    <span className="flex items-center gap-1.5 font-semibold text-neutral-800">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#2b1d16]" /> Árvore AVL
+                    </span>
+                    <span className="flex items-center gap-1.5 font-semibold text-[#854d27]">
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#854d27]" /> Árvore Rubro-Negra
+                    </span>
+                  </div>
+                </div>
+
+                {/* Subgroup 1: Rotações Estruturais */}
+                <div className="space-y-4">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block">
+                    Esforço de Rotação de Ponteiros
                   </span>
-                  <span className="flex items-center gap-1.5 font-medium text-rose-700">
-                    <span className="w-2.5 h-2.5 rounded-full bg-rose-600" /> Rubro-Negra
-                  </span>
+
+                  {/* Row: Inserção */}
+                  <div>
+                    <div className="flex justify-between text-xs mb-1.5 font-medium text-neutral-700">
+                      <span>Inserção ({selectedN.toLocaleString()} nós)</span>
+                      <span className="font-mono text-neutral-800">
+                        <span className="font-semibold text-neutral-900">{activeData.avl_rot_ins}</span> vs{' '}
+                        <span className="font-semibold text-[#854d27]">{activeData.rb_rot_ins}</span>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 h-4">
+                      <div className="bg-slate-100/90 rounded-md overflow-hidden flex items-center justify-end pr-1.5">
+                        <div
+                          className="bg-[#2b1d16] h-full rounded-md transition-all duration-500 flex items-center justify-end pr-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(16, Math.min(100, (activeData.avl_rot_ins / Math.max(activeData.avl_rot_ins, activeData.rb_rot_ins || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.avl_rot_ins}
+                        </div>
+                      </div>
+                      <div className="bg-[#fcfaf7] border border-[#854d27]/20 rounded-md overflow-hidden flex items-center justify-start pl-1.5">
+                        <div
+                          className="bg-[#854d27] h-full rounded-md transition-all duration-500 flex items-center justify-start pl-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(16, Math.min(100, (activeData.rb_rot_ins / Math.max(activeData.avl_rot_ins, activeData.rb_rot_ins || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.rb_rot_ins}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: Remoção 30% */}
+                  <div>
+                    <div className="flex justify-between text-xs mb-1.5 font-medium text-neutral-700">
+                      <span>Remoção Parcial (30% dos nós)</span>
+                      <span className="font-mono text-neutral-800">
+                        <span className="font-semibold text-neutral-900">{activeData.avl_rot_rem_30}</span> vs{' '}
+                        <span className="font-semibold text-[#854d27]">{activeData.rb_rot_rem_30}</span>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 h-4">
+                      <div className="bg-slate-100/90 rounded-md overflow-hidden flex items-center justify-end pr-1.5">
+                        <div
+                          className="bg-[#2b1d16] h-full rounded-md transition-all duration-500 flex items-center justify-end pr-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(16, Math.min(100, (activeData.avl_rot_rem_30 / Math.max(activeData.avl_rot_rem_30, activeData.rb_rot_rem_30 || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.avl_rot_rem_30}
+                        </div>
+                      </div>
+                      <div className="bg-[#fcfaf7] border border-[#854d27]/20 rounded-md overflow-hidden flex items-center justify-start pl-1.5">
+                        <div
+                          className="bg-[#854d27] h-full rounded-md transition-all duration-500 flex items-center justify-start pl-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(16, Math.min(100, (activeData.rb_rot_rem_30 / Math.max(activeData.avl_rot_rem_30, activeData.rb_rot_rem_30 || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.rb_rot_rem_30}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: Remoção 50% */}
+                  <div>
+                    <div className="flex justify-between text-xs mb-1.5 font-medium text-neutral-700">
+                      <span>Remoção Parcial (50% dos nós)</span>
+                      <span className="font-mono text-neutral-800">
+                        <span className="font-semibold text-neutral-900">{activeData.avl_rot_rem_50}</span> vs{' '}
+                        <span className="font-semibold text-[#854d27]">{activeData.rb_rot_rem_50}</span>
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 h-4">
+                      <div className="bg-slate-100/90 rounded-md overflow-hidden flex items-center justify-end pr-1.5">
+                        <div
+                          className="bg-[#2b1d16] h-full rounded-md transition-all duration-500 flex items-center justify-end pr-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(16, Math.min(100, (activeData.avl_rot_rem_50 / Math.max(activeData.avl_rot_rem_50, activeData.rb_rot_rem_50 || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.avl_rot_rem_50}
+                        </div>
+                      </div>
+                      <div className="bg-[#fcfaf7] border border-[#854d27]/20 rounded-md overflow-hidden flex items-center justify-start pl-1.5">
+                        <div
+                          className="bg-[#854d27] h-full rounded-md transition-all duration-500 flex items-center justify-start pl-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(16, Math.min(100, (activeData.rb_rot_rem_50 / Math.max(activeData.avl_rot_rem_50, activeData.rb_rot_rem_50 || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.rb_rot_rem_50}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Subgroup 2: Tempos de Execução em Milissegundos */}
+                <div className="space-y-4 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold uppercase tracking-wider text-neutral-400 block">
+                      Tempos de Execução (Milissegundos)
+                    </span>
+                    <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-500 font-mono">
+                      Menor é melhor
+                    </span>
+                  </div>
+
+                  {/* Row: Inserção Total */}
+                  <div>
+                    <div className="flex justify-between text-xs mb-1.5 font-medium text-neutral-700">
+                      <span>Inserção Total</span>
+                      <span className="font-mono text-neutral-800">
+                        {activeData.avl_tempo_ins_ms.toFixed(2)}ms vs {activeData.rb_tempo_ins_ms.toFixed(2)}ms
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 h-4">
+                      <div className="bg-slate-100/90 rounded-md overflow-hidden flex items-center justify-end pr-1.5">
+                        <div
+                          className="bg-[#2b1d16] h-full rounded-md transition-all duration-500 flex items-center justify-end pr-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(18, Math.min(100, (activeData.avl_tempo_ins_ms / Math.max(activeData.avl_tempo_ins_ms, activeData.rb_tempo_ins_ms || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.avl_tempo_ins_ms.toFixed(2)}ms
+                        </div>
+                      </div>
+                      <div className="bg-[#fcfaf7] border border-[#854d27]/20 rounded-md overflow-hidden flex items-center justify-start pl-1.5">
+                        <div
+                          className="bg-[#854d27] h-full rounded-md transition-all duration-500 flex items-center justify-start pl-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(18, Math.min(100, (activeData.rb_tempo_ins_ms / Math.max(activeData.avl_tempo_ins_ms, activeData.rb_tempo_ins_ms || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.rb_tempo_ins_ms.toFixed(2)}ms
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Row: Busca */}
+                  <div>
+                    <div className="flex justify-between text-xs mb-1.5 font-medium text-neutral-700">
+                      <span>Busca ({activeData.total_buscas.toLocaleString()} consultas)</span>
+                      <span className="font-mono text-neutral-800">
+                        {activeData.avl_tempo_busca_ms.toFixed(2)}ms vs {activeData.rb_tempo_busca_ms.toFixed(2)}ms
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 h-4">
+                      <div className="bg-slate-100/90 rounded-md overflow-hidden flex items-center justify-end pr-1.5">
+                        <div
+                          className="bg-[#2b1d16] h-full rounded-md transition-all duration-500 flex items-center justify-end pr-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(18, Math.min(100, (activeData.avl_tempo_busca_ms / Math.max(activeData.avl_tempo_busca_ms, activeData.rb_tempo_busca_ms || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.avl_tempo_busca_ms.toFixed(2)}ms
+                        </div>
+                      </div>
+                      <div className="bg-[#fcfaf7] border border-[#854d27]/20 rounded-md overflow-hidden flex items-center justify-start pl-1.5">
+                        <div
+                          className="bg-[#854d27] h-full rounded-md transition-all duration-500 flex items-center justify-start pl-1 text-[10px] font-mono text-white"
+                          style={{
+                            width: `${Math.max(18, Math.min(100, (activeData.rb_tempo_busca_ms / Math.max(activeData.avl_tempo_busca_ms, activeData.rb_tempo_busca_ms || 1)) * 100))}%`
+                          }}
+                        >
+                          {activeData.rb_tempo_busca_ms.toFixed(2)}ms
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div className="space-y-4 pt-2">
-                {/* Bar 1: Inserção */}
+              {/* Right Column (5 cols): Donut Chart (Task/Operations Distribution directly from Image 2) */}
+              <div className="lg:col-span-5 bg-white border border-slate-200 rounded-2xl p-6 shadow-xs flex flex-col justify-between">
                 <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium text-slate-700">
-                    <span>Inserção ({selectedN.toLocaleString()} nós)</span>
-                    <span className="font-mono">{activeData.avl_rot_ins} vs {activeData.rb_rot_ins}</span>
+                  <div className="border-b border-slate-100 pb-3">
+                    <h4 className="text-sm font-bold text-neutral-800">
+                      Distribuição Operacional (Rubro-Negra)
+                    </h4>
+                    <p className="text-xs text-neutral-500 mt-0.5">
+                      Proporção de Recolorações vs Rotações de balanceamento
+                    </p>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 h-5">
-                    <div className="bg-slate-100 rounded overflow-hidden flex items-center justify-end pr-2 text-[10px] font-mono text-white">
-                      <div
-                        className="bg-slate-900 h-full rounded transition-all duration-500 flex items-center justify-end pr-1.5"
-                        style={{
-                          width: `${Math.max(12, Math.min(100, (activeData.avl_rot_ins / Math.max(activeData.avl_rot_ins, activeData.rb_rot_ins || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.avl_rot_ins}
+
+                  {/* Donut Chart & Legend Container */}
+                  <div className="flex flex-col sm:flex-row items-center justify-center gap-6 py-6">
+                    {/* SVG Donut Circle */}
+                    <div className="relative w-32 h-32 shrink-0 flex items-center justify-center">
+                      <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          stroke="#f1f5f9"
+                          strokeWidth={strokeWidth}
+                          fill="none"
+                        />
+                        {/* Slice 1: Recolorações Inserção */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          stroke="#854d27"
+                          strokeWidth={strokeWidth}
+                          fill="none"
+                          strokeDasharray={`${recInsPct * circumference} ${circumference}`}
+                          strokeDashoffset={-off0}
+                          className="transition-all duration-700"
+                        />
+                        {/* Slice 2: Recolorações Remoção 30% */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          stroke="#c99b6d"
+                          strokeWidth={strokeWidth}
+                          fill="none"
+                          strokeDasharray={`${recRemPct * circumference} ${circumference}`}
+                          strokeDashoffset={-off1}
+                          className="transition-all duration-700"
+                        />
+                        {/* Slice 3: Rotações Inserção */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          stroke="#2b1d16"
+                          strokeWidth={strokeWidth}
+                          fill="none"
+                          strokeDasharray={`${rotInsPct * circumference} ${circumference}`}
+                          strokeDashoffset={-off2}
+                          className="transition-all duration-700"
+                        />
+                        {/* Slice 4: Rotações Remoção 30% */}
+                        <circle
+                          cx="50"
+                          cy="50"
+                          r={radius}
+                          stroke="#5c7c8a"
+                          strokeWidth={strokeWidth}
+                          fill="none"
+                          strokeDasharray={`${rotRemPct * circumference} ${circumference}`}
+                          strokeDashoffset={-off3}
+                          className="transition-all duration-700"
+                        />
+                      </svg>
+                      {/* Donut Center Counter */}
+                      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
+                        <span className="text-lg font-bold font-mono text-neutral-800 leading-tight">
+                          {totalOps.toLocaleString()}
+                        </span>
+                        <span className="text-[9px] text-slate-400 uppercase tracking-wider font-semibold">
+                          Total Ops
+                        </span>
                       </div>
                     </div>
-                    <div className="bg-rose-50 rounded overflow-hidden flex items-center justify-start pl-2 text-[10px] font-mono text-white">
-                      <div
-                        className="bg-rose-600 h-full rounded transition-all duration-500 flex items-center justify-start pl-1.5"
-                        style={{
-                          width: `${Math.max(12, Math.min(100, (activeData.rb_rot_ins / Math.max(activeData.avl_rot_ins, activeData.rb_rot_ins || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.rb_rot_ins}
+
+                    {/* Legend List (Identical to Image 2) */}
+                    <div className="space-y-2 text-xs w-full max-w-xs">
+                      <div className="flex items-center justify-between gap-3 text-neutral-700">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#854d27] shrink-0" />
+                          <span className="truncate">Recolor. Inserção</span>
+                        </div>
+                        <div className="font-mono text-right shrink-0">
+                          <span className="font-semibold text-neutral-900">{activeData.rb_rec_ins}</span>{' '}
+                          <span className="text-slate-400 text-[11px]">({(recInsPct * 100).toFixed(0)}%)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 text-neutral-700">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#c99b6d] shrink-0" />
+                          <span className="truncate">Recolor. Remoção 30%</span>
+                        </div>
+                        <div className="font-mono text-right shrink-0">
+                          <span className="font-semibold text-neutral-900">{activeData.rb_rec_rem_30 || 0}</span>{' '}
+                          <span className="text-slate-400 text-[11px]">({(recRemPct * 100).toFixed(0)}%)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 text-neutral-700">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#2b1d16] shrink-0" />
+                          <span className="truncate">Rotações Inserção</span>
+                        </div>
+                        <div className="font-mono text-right shrink-0">
+                          <span className="font-semibold text-neutral-900">{activeData.rb_rot_ins}</span>{' '}
+                          <span className="text-slate-400 text-[11px]">({(rotInsPct * 100).toFixed(0)}%)</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3 text-neutral-700">
+                        <div className="flex items-center gap-2">
+                          <span className="w-2.5 h-2.5 rounded-full bg-[#5c7c8a] shrink-0" />
+                          <span className="truncate">Rotações Remoção 30%</span>
+                        </div>
+                        <div className="font-mono text-right shrink-0">
+                          <span className="font-semibold text-neutral-900">{activeData.rb_rot_rem_30 || 0}</span>{' '}
+                          <span className="text-slate-400 text-[11px]">({(rotRemPct * 100).toFixed(0)}%)</span>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                {/* Bar 2: Remoção 30% */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium text-slate-700">
-                    <span>Remoção Parcial (30% das contas)</span>
-                    <span className="font-mono">{activeData.avl_rot_rem_30} vs {activeData.rb_rot_rem_30}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 h-5">
-                    <div className="bg-slate-100 rounded overflow-hidden flex items-center justify-end pr-2 text-[10px] font-mono text-white">
-                      <div
-                        className="bg-slate-800 h-full rounded transition-all duration-500 flex items-center justify-end pr-1.5"
-                        style={{
-                          width: `${Math.max(12, Math.min(100, (activeData.avl_rot_rem_30 / Math.max(activeData.avl_rot_rem_30, activeData.rb_rot_rem_30 || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.avl_rot_rem_30}
-                      </div>
-                    </div>
-                    <div className="bg-rose-50 rounded overflow-hidden flex items-center justify-start pl-2 text-[10px] font-mono text-white">
-                      <div
-                        className="bg-rose-500 h-full rounded transition-all duration-500 flex items-center justify-start pl-1.5"
-                        style={{
-                          width: `${Math.max(12, Math.min(100, (activeData.rb_rot_rem_30 / Math.max(activeData.avl_rot_rem_30, activeData.rb_rot_rem_30 || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.rb_rot_rem_30}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Bar 3: Remoção 50% */}
-                <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium text-slate-700">
-                    <span>Remoção Parcial 50%</span>
-                    <span className="font-mono">{activeData.avl_rot_rem_50} vs {activeData.rb_rot_rem_50}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 h-5">
-                    <div className="bg-slate-100 rounded overflow-hidden flex items-center justify-end pr-2 text-[10px] font-mono text-white">
-                      <div
-                        className="bg-slate-800 h-full rounded transition-all duration-500 flex items-center justify-end pr-1.5"
-                        style={{
-                          width: `${Math.max(12, Math.min(100, (activeData.avl_rot_rem_50 / Math.max(activeData.avl_rot_rem_50, activeData.rb_rot_rem_50 || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.avl_rot_rem_50}
-                      </div>
-                    </div>
-                    <div className="bg-rose-50 rounded overflow-hidden flex items-center justify-start pl-2 text-[10px] font-mono text-white">
-                      <div
-                        className="bg-rose-500 h-full rounded transition-all duration-500 flex items-center justify-start pl-1.5"
-                        style={{
-                          width: `${Math.max(12, Math.min(100, (activeData.rb_rot_rem_50 / Math.max(activeData.avl_rot_rem_50, activeData.rb_rot_rem_50 || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.rb_rot_rem_50}
-                      </div>
-                    </div>
-                  </div>
+                {/* Footer Insight Box */}
+                <div className="p-3 rounded-xl bg-[#fcfaf7] border border-[#854d27]/20 text-[11px] text-neutral-700 leading-relaxed flex items-center gap-2.5 mt-2">
+                  <Info className="w-4 h-4 text-[#854d27] shrink-0" />
+                  <span>
+                    Na Árvore Rubro-Negra, <b>recolorações absorvem a maioria do esforço</b> com complexidade $O(1)$, evitando rotações custosas de ponteiros.
+                  </span>
                 </div>
               </div>
             </div>
-
-            {/* Chart 2: Tempos de Busca e Inserção */}
-            <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs">
-              <div className="flex items-center justify-between mb-3">
-                <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
-                  Tempos de Execução em Milissegundos
-                </h4>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-100 text-slate-600 font-mono">
-                  Menor é melhor
-                </span>
-              </div>
-
-              <div className="space-y-4 pt-2">
-                <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium text-slate-700">
-                    <span>Tempo de Inserção Total</span>
-                    <span className="font-mono">{activeData.avl_tempo_ins_ms.toFixed(2)}ms vs {activeData.rb_tempo_ins_ms.toFixed(2)}ms</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 h-5">
-                    <div className="bg-slate-100 rounded overflow-hidden">
-                      <div
-                        className="bg-indigo-600 h-full rounded transition-all duration-500 flex items-center justify-end pr-1.5 text-[10px] font-mono text-white"
-                        style={{
-                          width: `${Math.max(15, Math.min(100, (activeData.avl_tempo_ins_ms / Math.max(activeData.avl_tempo_ins_ms, activeData.rb_tempo_ins_ms || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.avl_tempo_ins_ms.toFixed(2)}ms
-                      </div>
-                    </div>
-                    <div className="bg-rose-50 rounded overflow-hidden">
-                      <div
-                        className="bg-rose-600 h-full rounded transition-all duration-500 flex items-center justify-start pl-1.5 text-[10px] font-mono text-white"
-                        style={{
-                          width: `${Math.max(15, Math.min(100, (activeData.rb_tempo_ins_ms / Math.max(activeData.avl_tempo_ins_ms, activeData.rb_tempo_ins_ms || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.rb_tempo_ins_ms.toFixed(2)}ms
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium text-slate-700">
-                    <span>Tempo de Busca ({activeData.total_buscas.toLocaleString()} consultas)</span>
-                    <span className="font-mono">{activeData.avl_tempo_busca_ms.toFixed(2)}ms vs {activeData.rb_tempo_busca_ms.toFixed(2)}ms</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 h-5">
-                    <div className="bg-slate-100 rounded overflow-hidden">
-                      <div
-                        className="bg-indigo-500 h-full rounded transition-all duration-500 flex items-center justify-end pr-1.5 text-[10px] font-mono text-white"
-                        style={{
-                          width: `${Math.max(15, Math.min(100, (activeData.avl_tempo_busca_ms / Math.max(activeData.avl_tempo_busca_ms, activeData.rb_tempo_busca_ms || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.avl_tempo_busca_ms.toFixed(2)}ms
-                      </div>
-                    </div>
-                    <div className="bg-rose-50 rounded overflow-hidden">
-                      <div
-                        className="bg-rose-500 h-full rounded transition-all duration-500 flex items-center justify-start pl-1.5 text-[10px] font-mono text-white"
-                        style={{
-                          width: `${Math.max(15, Math.min(100, (activeData.rb_tempo_busca_ms / Math.max(activeData.avl_tempo_busca_ms, activeData.rb_tempo_busca_ms || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.rb_tempo_busca_ms.toFixed(2)}ms
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between text-xs mb-1 font-medium text-slate-700">
-                    <span>Tempo de Remoção (30% das contas)</span>
-                    <span className="font-mono">{activeData.avl_tempo_rem_30_ms.toFixed(2)}ms vs {activeData.rb_tempo_rem_30_ms.toFixed(2)}ms</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 h-5">
-                    <div className="bg-slate-100 rounded overflow-hidden">
-                      <div
-                        className="bg-indigo-500 h-full rounded transition-all duration-500 flex items-center justify-end pr-1.5 text-[10px] font-mono text-white"
-                        style={{
-                          width: `${Math.max(15, Math.min(100, (activeData.avl_tempo_rem_30_ms / Math.max(activeData.avl_tempo_rem_30_ms, activeData.rb_tempo_rem_30_ms || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.avl_tempo_rem_30_ms.toFixed(2)}ms
-                      </div>
-                    </div>
-                    <div className="bg-rose-50 rounded overflow-hidden">
-                      <div
-                        className="bg-rose-500 h-full rounded transition-all duration-500 flex items-center justify-start pl-1.5 text-[10px] font-mono text-white"
-                        style={{
-                          width: `${Math.max(15, Math.min(100, (activeData.rb_tempo_rem_30_ms / Math.max(activeData.avl_tempo_rem_30_ms, activeData.rb_tempo_rem_30_ms || 1)) * 100))}%`
-                        }}
-                      >
-                        {activeData.rb_tempo_rem_30_ms.toFixed(2)}ms
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
+          );
+        })()}
 
         {/* ================= SECTION: EQUIVALENCE CHECK & SAMPLES ================= */}
         {activeData && (
           <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-4 h-4 text-emerald-600" />
-                <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider">
+                <ShieldCheck className="w-4 h-4 text-[#12372a]" />
+                <h4 className="text-xs font-semibold text-neutral-800 uppercase tracking-wider">
                   Validação Cruzada de Integridade e Equivalência Estrutural
                 </h4>
               </div>
-              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">
+              <span className="text-[11px] px-2.5 py-0.5 rounded-full bg-[#12372a]/10 text-[#12372a] font-semibold border border-[#12372a]/20">
                 {activeData.equivalencia_em_ordem ? '100% IDÊNTICAS' : 'DIVERGÊNCIA DETECTADA'}
               </span>
             </div>
