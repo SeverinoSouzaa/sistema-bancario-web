@@ -24,7 +24,11 @@ import {
   CircleDot,
   Zap,
   Activity,
-  Play
+  Play,
+  Code2,
+  Check,
+  ChevronDown,
+  ChevronUp
 } from 'lucide-react';
 import BinaryTreeVisualizer from './components/BinaryTreeVisualizer';
 import DetailedExecutionInspector from './components/DetailedExecutionInspector';
@@ -58,6 +62,7 @@ export default function App() {
   // Accordion state for Operações de Conta in the sidebar
   const [cadastrarOpen, setCadastrarOpen] = useState(false);
   const [consultarOpen, setConsultarOpen] = useState(false);
+  const [tipoDropdownOpen, setTipoDropdownOpen] = useState(false);
 
   // Confirmation Modal for running experiments
   const [confirmExperimentModal, setConfirmExperimentModal] = useState(null);
@@ -301,15 +306,15 @@ export default function App() {
         {/* Workspace Brand / Header */}
         <div className="h-14 border-b border-slate-200 px-5 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-              B
+            <div className="w-8 h-8 rounded-md bg-slate-900 text-white flex items-center justify-center shadow-xs shrink-0">
+              <Code2 className="w-4 h-4 text-white" />
             </div>
             <div>
-              <h1 className="text-xs font-bold text-slate-900 leading-tight">Sistema Bancário</h1>
+              <h1 className="text-xs font-semibold text-slate-900 leading-tight">Sistema Bancário</h1>
               <p className="text-[11px] text-slate-500 font-medium">Árvores Balanceadas</p>
             </div>
           </div>
-          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-semibold border border-slate-200">
+          <span className="text-[10px] font-mono px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-medium border border-slate-200/80">
             v1.0
           </span>
         </div>
@@ -318,7 +323,7 @@ export default function App() {
         <div className="flex-1 overflow-y-auto px-3.5 py-4 space-y-6">
           {/* Section: OPERAÇÕES DE CONTA (Topo das Opções) */}
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+            <span className="text-[11px] font-medium text-slate-400 px-2.5 block mb-1.5 select-none">
               Operações de Conta
             </span>
             <div className="space-y-1">
@@ -326,17 +331,18 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setCadastrarOpen(!cadastrarOpen)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
-                  cadastrarOpen ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-700 hover:bg-slate-100/70 hover:text-slate-900'
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer ${
+                  cadastrarOpen ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <UserPlus className="w-4 h-4 text-slate-400" />
+                  <UserPlus className={`w-4 h-4 ${cadastrarOpen ? 'text-slate-800' : 'text-slate-400'}`} />
                   <span>Cadastrar Conta</span>
                 </div>
                 <ChevronRight
-                  className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
-                  style={{ transform: cadastrarOpen ? 'rotate(90deg)' : 'none' }}
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                    cadastrarOpen ? 'rotate-90 text-slate-700' : ''
+                  }`}
                 />
               </button>
 
@@ -344,25 +350,25 @@ export default function App() {
               {cadastrarOpen && (
                 <form
                   onSubmit={handleInserir}
-                  className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 my-1.5 animate-in fade-in duration-150"
+                  className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-2.5 my-1.5 animate-in fade-in duration-150"
                 >
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    <label className="block text-[11px] font-medium text-slate-700 mb-1">
                       Número da Conta <span className="text-rose-500">*</span>
                     </label>
                     <input
-                      type="number"
-                      min="1"
+                      type="text"
+                      inputMode="numeric"
                       placeholder="Ex: 20"
                       value={numeroConta}
-                      onChange={(e) => setNumeroConta(e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 font-mono transition-all"
+                      onChange={(e) => setNumeroConta(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-800 focus:ring-1 focus:ring-slate-800 font-mono transition-all"
                       required
                     />
                   </div>
 
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    <label className="block text-[11px] font-medium text-slate-700 mb-1">
                       Nome do Titular <span className="text-slate-400 font-normal">(opcional)</span>
                     </label>
                     <input
@@ -370,40 +376,86 @@ export default function App() {
                       placeholder="Ex: Carlos Silva"
                       value={titular}
                       onChange={(e) => setTitular(e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 transition-all"
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-all"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Saldo (R$)</label>
-                      <input
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        value={saldo}
-                        onChange={(e) => setSaldo(e.target.value)}
-                        className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 font-mono"
-                      />
+                      <label className="block text-[11px] font-medium text-slate-700 mb-1">Saldo</label>
+                      <div className="relative flex items-center rounded-lg border border-slate-200 bg-white focus-within:border-slate-800 focus-within:ring-1 focus-within:ring-slate-800 transition-all overflow-hidden">
+                        <span className="pl-2 text-[11px] text-slate-400 font-medium select-none pointer-events-none">R$</span>
+                        <input
+                          type="number"
+                          step="0.01"
+                          min="0"
+                          value={saldo}
+                          onChange={(e) => setSaldo(e.target.value)}
+                          className="w-full text-xs pl-1 pr-5 py-1.5 bg-transparent text-slate-900 font-mono focus:outline-none"
+                        />
+                        <div className="absolute right-0 top-0 bottom-0 flex flex-col border-l border-slate-100 bg-slate-50/50">
+                          <button
+                            type="button"
+                            tabIndex="-1"
+                            onClick={() => setSaldo((prev) => (Math.max(0, (parseFloat(prev) || 0) + 100)).toFixed(2))}
+                            className="flex-1 px-1 flex items-center justify-center hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer border-b border-slate-100"
+                            title="Aumentar R$ 100"
+                          >
+                            <ChevronUp className="w-2.5 h-2.5" />
+                          </button>
+                          <button
+                            type="button"
+                            tabIndex="-1"
+                            onClick={() => setSaldo((prev) => (Math.max(0, (parseFloat(prev) || 0) - 100)).toFixed(2))}
+                            className="flex-1 px-1 flex items-center justify-center hover:bg-slate-200 text-slate-400 hover:text-slate-700 transition-colors cursor-pointer"
+                            title="Diminuir R$ 100"
+                          >
+                            <ChevronDown className="w-2.5 h-2.5" />
+                          </button>
+                        </div>
+                      </div>
                     </div>
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-700 mb-1">Tipo</label>
-                      <select
-                        value={tipoConta}
-                        onChange={(e) => setTipoConta(e.target.value)}
-                        className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900"
-                      >
-                        <option value="Corrente">Corrente</option>
-                        <option value="Poupanca">Poupança</option>
-                        <option value="Salario">Salário</option>
-                      </select>
+                      <label className="block text-[11px] font-medium text-slate-700 mb-1">Tipo</label>
+                      <div className="relative">
+                        <button
+                          type="button"
+                          onClick={() => setTipoDropdownOpen(!tipoDropdownOpen)}
+                          className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-800 flex items-center justify-between hover:bg-slate-50 focus:outline-none focus:border-slate-800 focus:ring-1 focus:ring-slate-800 transition-colors cursor-pointer"
+                        >
+                          <span className="truncate">{tipoConta}</span>
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${tipoDropdownOpen ? 'rotate-180' : ''}`} />
+                        </button>
+                        {tipoDropdownOpen && (
+                          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-30 animate-in fade-in-50 zoom-in-95 duration-100">
+                            {['Corrente', 'Poupança', 'Salário'].map((tipo) => (
+                              <button
+                                key={tipo}
+                                type="button"
+                                onClick={() => {
+                                  setTipoConta(tipo);
+                                  setTipoDropdownOpen(false);
+                                }}
+                                className={`w-full px-2.5 py-1.5 text-xs text-left flex items-center justify-between transition-colors cursor-pointer ${
+                                  tipoConta === tipo
+                                    ? 'bg-slate-50 text-slate-900 font-semibold'
+                                    : 'text-slate-700 hover:bg-slate-100'
+                                }`}
+                              >
+                                <span>{tipo}</span>
+                                {tipoConta === tipo && <Check className="w-3.5 h-3.5 text-slate-800" />}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full mt-1 text-xs font-semibold py-2 px-3 rounded-lg bg-slate-900 text-white hover:bg-slate-800 active:bg-slate-950 transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                    className="w-full mt-1 text-xs font-medium py-2 px-3 rounded-lg bg-slate-800 text-white hover:bg-slate-700 active:bg-slate-900 transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
                   >
                     <Plus className="w-3.5 h-3.5" />
                     <span>{loading ? 'Cadastrando...' : 'Inserir nas Duas Árvores'}</span>
@@ -415,35 +467,39 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setConsultarOpen(!consultarOpen)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-colors text-left cursor-pointer ${
-                  consultarOpen ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-700 hover:bg-slate-100/70 hover:text-slate-900'
+                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer ${
+                  consultarOpen ? 'bg-slate-100 text-slate-900 font-semibold' : 'text-slate-600 hover:bg-slate-100/70 hover:text-slate-900'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Search className="w-4 h-4 text-slate-400" />
+                  <Search className={`w-4 h-4 ${consultarOpen ? 'text-slate-800' : 'text-slate-400'}`} />
                   <span>Consultar / Excluir</span>
                 </div>
                 <ChevronRight
-                  className="w-3.5 h-3.5 text-slate-400 transition-transform duration-200"
-                  style={{ transform: consultarOpen ? 'rotate(90deg)' : 'none' }}
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                    consultarOpen ? 'rotate-90 text-slate-700' : ''
+                  }`}
                 />
               </button>
 
               {/* Subsection: Consultar Form Inline */}
               {consultarOpen && (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 my-1.5 animate-in fade-in duration-150">
+                <div className="p-3 bg-slate-50/80 border border-slate-200/80 rounded-xl space-y-2.5 my-1.5 animate-in fade-in duration-150">
                   <div>
-                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                    <label className="block text-[11px] font-medium text-slate-700 mb-1">
                       Número da Conta <span className="text-rose-500">*</span>
                     </label>
-                    <input
-                      type="number"
-                      min="1"
-                      placeholder="Digite o número da conta..."
-                      value={chaveOperacao}
-                      onChange={(e) => setChaveOperacao(e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-900 focus:ring-1 focus:ring-slate-900 font-mono"
-                    />
+                    <div className="relative">
+                      <input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="Digite o número da conta..."
+                        value={chaveOperacao}
+                        onChange={(e) => setChaveOperacao(e.target.value.replace(/\D/g, ''))}
+                        className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 focus:outline-hidden focus:border-slate-800 focus:ring-1 focus:ring-slate-800 font-mono transition-all"
+                      />
+                      <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 pt-0.5">
@@ -451,16 +507,16 @@ export default function App() {
                       type="button"
                       onClick={handleBuscar}
                       disabled={loading || !chaveOperacao}
-                      className="text-xs font-semibold py-1.5 px-2 rounded-lg border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                      className="text-xs font-medium py-1.5 px-2 rounded-lg border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
                     >
-                      <Search className="w-3.5 h-3.5 text-slate-500" />
+                      <Search className="w-3.5 h-3.5 text-slate-400" />
                       <span>Localizar</span>
                     </button>
                     <button
                       type="button"
                       onClick={handleRemover}
                       disabled={loading || !chaveOperacao}
-                      className="text-xs font-semibold py-1.5 px-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
+                      className="text-xs font-medium py-1.5 px-2 rounded-lg border border-rose-200 bg-rose-50 text-rose-700 hover:bg-rose-100 transition-colors flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-50"
                     >
                       <Trash2 className="w-3.5 h-3.5 text-rose-600" />
                       <span>Encerrar</span>
@@ -488,10 +544,10 @@ export default function App() {
 
           {/* Section: VISUALIZAÇÃO DE ÁRVORES */}
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+            <span className="text-[11px] font-medium text-slate-400 px-2.5 block mb-1.5 select-none">
               Visualização de Árvores
             </span>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {[
                 { id: 'split', label: 'Lado a Lado (Comparativo)', icon: ArrowRightLeft },
                 { id: 'avl', label: 'Foco na AVL', icon: Layers },
@@ -509,13 +565,13 @@ export default function App() {
                       setStepTreeRB(null);
                       setStepFocusKey(null);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors text-left cursor-pointer ${
                       isActive
-                        ? 'bg-slate-900 text-white font-semibold shadow-xs'
-                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                        ? 'bg-slate-100 text-slate-900 font-semibold shadow-2xs'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
                     }`}
                   >
-                    <IconComponent className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                    <IconComponent className={`w-4 h-4 ${isActive ? 'text-slate-800' : 'text-slate-400'}`} />
                     <span>{item.label}</span>
                   </button>
                 );
@@ -525,85 +581,78 @@ export default function App() {
 
           {/* Section: EXPERIMENTOS AUTOMÁTICOS */}
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+            <span className="text-[11px] font-medium text-slate-400 px-2.5 block mb-1.5 select-none">
               Experimentos Automáticos
             </span>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               <button
                 type="button"
                 onClick={() => solicitarExecucaoExperimento('padrao')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors text-left cursor-pointer ${
                   viewMode === 'experiments' && experimentMode === 'padrao'
-                    ? 'bg-indigo-50 text-indigo-900 font-semibold border border-indigo-200 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                    ? 'bg-slate-100 text-slate-900 font-semibold shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <Activity className="w-4 h-4 text-indigo-600" />
-                  <span>Bateria Completa (100, 1k, 10k)</span>
-                </div>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-indigo-100 text-indigo-700 font-mono font-medium">
-                  Auto
-                </span>
+                <Activity className={`w-4 h-4 ${viewMode === 'experiments' && experimentMode === 'padrao' ? 'text-slate-800' : 'text-slate-400'}`} />
+                <span>Bateria Completa (100, 1k, 10k)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => solicitarExecucaoExperimento('rapida')}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors text-left cursor-pointer ${
                   viewMode === 'experiments' && experimentMode === 'rapida'
-                    ? 'bg-indigo-50 text-indigo-900 font-semibold border border-indigo-200 shadow-2xs'
-                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70'
+                    ? 'bg-slate-100 text-slate-900 font-semibold shadow-2xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
                 }`}
               >
-                <div className="flex items-center gap-2.5">
-                  <Zap className="w-4 h-4 text-amber-500" />
-                  <span>Validação Rápida (N = 100)</span>
-                </div>
-                <span className="text-[10px] px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-700 font-mono font-medium">
-                  13ms
-                </span>
+                <Zap className={`w-4 h-4 ${viewMode === 'experiments' && experimentMode === 'rapida' ? 'text-slate-800' : 'text-slate-400'}`} />
+                <span>Validação Rápida (N = 100)</span>
               </button>
 
               {/* Custom N Collapsible */}
               <div
-                className={`rounded-xl transition-all overflow-hidden ${
+                className={`rounded-lg transition-all overflow-hidden ${
                   viewMode === 'experiments' && experimentMode === 'custom'
-                    ? 'bg-indigo-50/50 border border-indigo-200'
+                    ? 'bg-slate-100/80'
                     : ''
                 }`}
               >
                 <button
                   type="button"
                   onClick={() => setShowCustomNInput(!showCustomNInput)}
-                  className="w-full flex items-center justify-between px-3 py-2 rounded-xl text-xs font-medium text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 transition-all text-left cursor-pointer"
+                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors text-left cursor-pointer ${
+                    viewMode === 'experiments' && experimentMode === 'custom'
+                      ? 'text-slate-900 font-semibold'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/70 font-medium'
+                  }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Sliders className="w-4 h-4 text-slate-400" />
+                    <Sliders className={`w-4 h-4 ${viewMode === 'experiments' && experimentMode === 'custom' ? 'text-slate-800' : 'text-slate-400'}`} />
                     <span>Tamanho Personalizado</span>
                   </div>
                   <ChevronRight
                     className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
-                      showCustomNInput ? 'rotate-90' : ''
+                      showCustomNInput ? 'rotate-90 text-slate-700' : ''
                     }`}
                   />
                 </button>
 
                 {showCustomNInput && (
-                  <div className="px-3 pb-2.5 pt-1 flex items-center gap-1.5">
+                  <div className="px-3 pb-2.5 pt-1 flex items-center gap-1.5 animate-in fade-in duration-150">
                     <input
-                      type="number"
-                      min="1"
-                      max="100000"
+                      type="text"
+                      inputMode="numeric"
                       placeholder="N livre (ex: 500)"
                       value={experimentCustomN}
-                      onChange={(e) => setExperimentCustomN(e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-indigo-600 focus:ring-1 focus:ring-indigo-600 font-mono"
+                      onChange={(e) => setExperimentCustomN(e.target.value.replace(/\D/g, ''))}
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-900 focus:outline-hidden focus:border-slate-800 focus:ring-1 focus:ring-slate-800 font-mono"
                     />
                     <button
                       type="button"
                       onClick={() => solicitarExecucaoExperimento('custom', experimentCustomN)}
-                      className="text-xs px-2.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-semibold transition-colors shrink-0 shadow-2xs cursor-pointer"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 active:bg-slate-900 text-white font-medium transition-colors shrink-0 shadow-2xs cursor-pointer"
                     >
                       Rodar
                     </button>
@@ -615,26 +664,33 @@ export default function App() {
 
           {/* Section: CONFIGURAÇÕES & EXIBIÇÃO */}
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 block mb-2">
+            <span className="text-[11px] font-medium text-slate-400 px-2.5 block mb-1.5 select-none">
               Configurações & Exibição
             </span>
-            <div className="space-y-1.5 px-1">
-              <label className="flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs text-slate-700 hover:bg-slate-50 cursor-pointer transition-colors">
-                <input
-                  type="checkbox"
-                  checked={showNil}
-                  onChange={(e) => setShowNil(e.target.checked)}
-                  className="w-3.5 h-3.5 rounded-sm border-slate-300 text-slate-900 focus:ring-slate-900"
-                />
-                <span>Sentinelas NIL na Rubro-Negra</span>
-              </label>
+            <div className="space-y-0.5">
+              <button
+                type="button"
+                onClick={() => setShowNil(!showNil)}
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 cursor-pointer transition-colors text-left"
+              >
+                <div
+                  className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition-all shrink-0 ${
+                    showNil
+                      ? 'bg-slate-800 border-slate-800 text-white shadow-2xs'
+                      : 'bg-white border-slate-300 hover:border-slate-400'
+                  }`}
+                >
+                  {showNil && <Check className="w-3 h-3 stroke-[2.5]" />}
+                </div>
+                <span className="font-medium text-slate-700">Sentinelas NIL na Rubro-Negra</span>
+              </button>
 
               <button
                 type="button"
                 onClick={() => setShowConsoleDrawer(!showConsoleDrawer)}
-                className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg text-xs text-slate-700 hover:bg-slate-50 transition-colors cursor-pointer text-left"
+                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-slate-600 hover:bg-slate-100/70 hover:text-slate-900 transition-colors cursor-pointer text-left font-medium"
               >
-                <Terminal className="w-3.5 h-3.5 text-slate-500" />
+                <Terminal className="w-4 h-4 text-slate-400" />
                 <span>Console de Rotações</span>
               </button>
             </div>
@@ -649,7 +705,7 @@ export default function App() {
             </div>
             <div className="leading-tight">
               <p className="font-semibold text-slate-800 text-xs">Equipe AED II</p>
-              <p className="text-[11px] text-slate-500">Ciência da Computação</p>
+              <p className="text-[11px] text-slate-500">UFAM - ICET</p>
             </div>
           </div>
           <button
