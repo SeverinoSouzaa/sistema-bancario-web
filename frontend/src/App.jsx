@@ -336,17 +336,17 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setCadastrarOpen(!cadastrarOpen)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer ${
-                  cadastrarOpen ? 'bg-slate-100 text-neutral-900 font-semibold' : 'text-neutral-600 hover:bg-slate-100/70 hover:text-neutral-900'
+                className={`w-full group flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 text-left cursor-pointer ${
+                  cadastrarOpen ? 'bg-slate-100 text-neutral-900 font-semibold' : 'text-neutral-600 hover:bg-slate-100/80 hover:text-neutral-900'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <UserPlus className={`w-4 h-4 ${cadastrarOpen ? 'text-[#744525]' : 'text-[#9c7253]'}`} />
+                  <UserPlus className={`w-4 h-4 transition-colors duration-200 ${cadastrarOpen ? 'text-[#854d27]' : 'text-slate-500 group-hover:text-[#854d27]'}`} />
                   <span>Cadastrar Conta</span>
                 </div>
                 <ChevronRight
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    cadastrarOpen ? 'rotate-90 text-[#744525]' : 'text-[#9c7253]'
+                  className={`w-3.5 h-3.5 transition-all duration-200 ${
+                    cadastrarOpen ? 'rotate-90 text-[#854d27]' : 'text-slate-400 group-hover:text-[#854d27]'
                   }`}
                 />
               </button>
@@ -364,32 +364,32 @@ export default function App() {
                     <input
                       type="text"
                       inputMode="numeric"
-                      placeholder="Ex: 20"
+                      placeholder="Ex: 10420"
                       value={numeroConta}
                       onChange={(e) => setNumeroConta(e.target.value.replace(/\D/g, ''))}
-                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#9c7253]/45 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-hidden focus:border-[#744525] focus:ring-1 focus:ring-[#744525]/20 font-mono transition-all"
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-hidden focus:border-[#854d27] focus:ring-1 focus:ring-[#854d27]/25 font-mono transition-all duration-200"
                       required
                     />
                   </div>
 
                   <div>
                     <label className="block text-[11px] font-medium text-neutral-700 mb-1">
-                      Nome do Titular <span className="text-neutral-400 font-normal">(opcional)</span>
+                      Nome do Titular
                     </label>
                     <input
                       type="text"
                       placeholder="Ex: Carlos Silva"
                       value={titular}
                       onChange={(e) => setTitular(e.target.value)}
-                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#9c7253]/45 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-hidden focus:border-[#744525] focus:ring-1 focus:ring-[#744525]/20 transition-all"
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-hidden focus:border-[#854d27] focus:ring-1 focus:ring-[#854d27]/25 transition-all duration-200"
                     />
                   </div>
 
                   <div className="grid grid-cols-2 gap-2">
                     <div>
                       <label className="block text-[11px] font-medium text-neutral-700 mb-1">Saldo</label>
-                      <div className="relative flex items-center rounded-lg border border-[#9c7253]/45 bg-white focus-within:border-[#744525] focus-within:ring-1 focus-within:ring-[#744525]/20 transition-all overflow-hidden">
-                        <span className="pl-2 text-[11px] text-[#9c7253] font-medium select-none pointer-events-none">R$</span>
+                      <div className="relative flex items-center rounded-lg border border-slate-200 bg-white focus-within:border-[#854d27] focus-within:ring-1 focus-within:ring-[#854d27]/25 transition-all duration-200 overflow-hidden">
+                        <span className="pl-2 text-[11px] text-slate-400 font-medium select-none pointer-events-none">R$</span>
                         <input
                           type="number"
                           step="0.01"
@@ -398,12 +398,12 @@ export default function App() {
                           onChange={(e) => setSaldo(e.target.value)}
                           className="w-full text-xs pl-1 pr-5 py-1.5 bg-transparent text-neutral-900 font-mono focus:outline-none"
                         />
-                        <div className="absolute right-0 top-0 bottom-0 flex flex-col border-l border-[#9c7253]/20 bg-[#faf7f3]">
+                        <div className="absolute right-0 top-0 bottom-0 flex flex-col border-l border-slate-200 bg-slate-50">
                           <button
                             type="button"
                             tabIndex="-1"
                             onClick={() => setSaldo((prev) => (Math.max(0, (parseFloat(prev) || 0) + 100)).toFixed(2))}
-                            className="flex-1 px-1 flex items-center justify-center hover:bg-[#ede5dc] text-[#9c7253] hover:text-[#744525] transition-colors cursor-pointer border-b border-[#9c7253]/20"
+                            className="flex-1 px-1 flex items-center justify-center hover:bg-slate-100 text-slate-400 hover:text-[#854d27] transition-colors cursor-pointer border-b border-slate-200"
                             title="Aumentar R$ 100"
                           >
                             <ChevronUp className="w-2.5 h-2.5" />
@@ -412,7 +412,7 @@ export default function App() {
                             type="button"
                             tabIndex="-1"
                             onClick={() => setSaldo((prev) => (Math.max(0, (parseFloat(prev) || 0) - 100)).toFixed(2))}
-                            className="flex-1 px-1 flex items-center justify-center hover:bg-[#ede5dc] text-[#9c7253] hover:text-[#744525] transition-colors cursor-pointer"
+                            className="flex-1 px-1 flex items-center justify-center hover:bg-slate-100 text-slate-400 hover:text-[#854d27] transition-colors cursor-pointer"
                             title="Diminuir R$ 100"
                           >
                             <ChevronDown className="w-2.5 h-2.5" />
@@ -426,13 +426,17 @@ export default function App() {
                         <button
                           type="button"
                           onClick={() => setTipoDropdownOpen(!tipoDropdownOpen)}
-                          className="w-full text-xs px-2 py-1.5 rounded-lg border border-[#9c7253]/45 bg-white text-neutral-800 flex items-center justify-between hover:bg-[#fcfaf7] hover:border-[#744525] focus:outline-none focus:border-[#744525] focus:ring-1 focus:ring-[#744525]/20 transition-colors cursor-pointer"
+                          className={`w-full text-xs px-2 py-1.5 rounded-lg border bg-white text-neutral-800 flex items-center justify-between transition-all duration-200 cursor-pointer ${
+                            tipoDropdownOpen
+                              ? 'border-[#854d27] ring-1 ring-[#854d27]/25'
+                              : 'border-slate-200 hover:border-slate-300'
+                          }`}
                         >
                           <span className="truncate">{tipoConta}</span>
-                          <ChevronDown className={`w-3.5 h-3.5 text-[#9c7253] transition-transform duration-200 shrink-0 ${tipoDropdownOpen ? 'rotate-180' : ''}`} />
+                          <ChevronDown className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 shrink-0 ${tipoDropdownOpen ? 'rotate-180 text-[#854d27]' : ''}`} />
                         </button>
                         {tipoDropdownOpen && (
-                          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-[#9c7253]/30 rounded-lg shadow-lg py-1 z-30 animate-in fade-in-50 zoom-in-95 duration-100">
+                          <div className="absolute left-0 right-0 top-full mt-1 bg-white border border-slate-200 rounded-lg shadow-lg py-1 z-30 animate-in fade-in-50 zoom-in-95 duration-100">
                             {['Corrente', 'Poupança', 'Salário'].map((tipo) => (
                               <button
                                 key={tipo}
@@ -443,12 +447,12 @@ export default function App() {
                                 }}
                                 className={`w-full px-2.5 py-1.5 text-xs text-left flex items-center justify-between transition-colors cursor-pointer ${
                                   tipoConta === tipo
-                                    ? 'bg-[#f5efe9] text-[#744525] font-semibold'
-                                    : 'text-neutral-700 hover:bg-[#faf7f3]'
+                                    ? 'bg-slate-100 text-[#854d27] font-semibold'
+                                    : 'text-neutral-700 hover:bg-slate-50'
                                 }`}
                               >
                                 <span>{tipo}</span>
-                                {tipoConta === tipo && <Check className="w-3.5 h-3.5 text-[#744525]" />}
+                                {tipoConta === tipo && <Check className="w-3.5 h-3.5 text-[#854d27]" />}
                               </button>
                             ))}
                           </div>
@@ -460,9 +464,9 @@ export default function App() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full mt-1 text-xs font-medium py-2 px-3 rounded-lg bg-[#12372a] text-white hover:bg-[#184535] active:bg-[#0a231b] transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                    className="w-full mt-1 text-xs font-semibold py-2 px-3 rounded-lg bg-[#14532d] text-white hover:bg-[#166534] active:bg-[#0f3d21] transition-colors duration-200 flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
                   >
-                    <Plus className="w-3.5 h-3.5" />
+                    <Plus className="w-3.5 h-3.5 stroke-[2.5]" />
                     <span>{loading ? 'Cadastrando...' : 'Inserir nas Duas Árvores'}</span>
                   </button>
                 </form>
@@ -472,17 +476,17 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setConsultarOpen(!consultarOpen)}
-                className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-colors text-left cursor-pointer ${
-                  consultarOpen ? 'bg-slate-100 text-neutral-900 font-semibold' : 'text-neutral-600 hover:bg-slate-100/70 hover:text-neutral-900'
+                className={`w-full group flex items-center justify-between px-3 py-2 rounded-lg text-xs font-medium transition-all duration-200 text-left cursor-pointer ${
+                  consultarOpen ? 'bg-slate-100 text-neutral-900 font-semibold' : 'text-neutral-600 hover:bg-slate-100/80 hover:text-neutral-900'
                 }`}
               >
                 <div className="flex items-center gap-2.5">
-                  <Search className={`w-4 h-4 ${consultarOpen ? 'text-[#744525]' : 'text-[#9c7253]'}`} />
+                  <Search className={`w-4 h-4 transition-colors duration-200 ${consultarOpen ? 'text-[#854d27]' : 'text-slate-500 group-hover:text-[#854d27]'}`} />
                   <span>Consultar / Excluir</span>
                 </div>
                 <ChevronRight
-                  className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                    consultarOpen ? 'rotate-90 text-[#744525]' : 'text-[#9c7253]'
+                  className={`w-3.5 h-3.5 transition-all duration-200 ${
+                    consultarOpen ? 'rotate-90 text-[#854d27]' : 'text-slate-400 group-hover:text-[#854d27]'
                   }`}
                 />
               </button>
@@ -501,9 +505,9 @@ export default function App() {
                         placeholder="Digite o número da conta..."
                         value={chaveOperacao}
                         onChange={(e) => setChaveOperacao(e.target.value.replace(/\D/g, ''))}
-                        className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-lg border border-[#9c7253]/45 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-hidden focus:border-[#744525] focus:ring-1 focus:ring-[#744525]/20 font-mono transition-all"
+                        className="w-full text-xs pl-8 pr-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-neutral-900 placeholder:text-neutral-400 focus:outline-hidden focus:border-[#854d27] focus:ring-1 focus:ring-[#854d27]/25 font-mono transition-all duration-200 peer"
                       />
-                      <Search className="w-3.5 h-3.5 text-[#9c7253] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                      <Search className="w-3.5 h-3.5 text-slate-400 peer-focus:text-[#854d27] transition-colors duration-200 absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     </div>
                   </div>
 
@@ -512,9 +516,9 @@ export default function App() {
                       type="button"
                       onClick={handleBuscar}
                       disabled={loading || !chaveOperacao}
-                      className="text-xs font-medium py-1.5 px-2 rounded-lg border border-slate-200 bg-white text-neutral-700 hover:bg-slate-50 hover:border-slate-300 transition-colors flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
+                      className="group/btn text-xs font-medium py-1.5 px-2 rounded-lg border border-slate-200 bg-white text-neutral-700 hover:bg-slate-50 hover:border-slate-300 transition-all duration-200 flex items-center justify-center gap-1.5 shadow-2xs cursor-pointer disabled:opacity-50"
                     >
-                      <Search className="w-3.5 h-3.5 text-[#9c7253]" />
+                      <Search className="w-3.5 h-3.5 text-slate-400 group-hover/btn:text-[#854d27] transition-colors duration-200" />
                       <span>Localizar</span>
                     </button>
                     <button
@@ -570,13 +574,17 @@ export default function App() {
                       setStepTreeRB(null);
                       setStepFocusKey(null);
                     }}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors text-left cursor-pointer ${
+                    className={`w-full group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all duration-200 text-left cursor-pointer ${
                       isActive
                         ? 'bg-slate-100 text-neutral-900 font-semibold shadow-2xs'
-                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-slate-100/70 font-medium'
+                        : 'text-neutral-600 hover:text-neutral-900 hover:bg-slate-100/80 font-medium'
                     }`}
                   >
-                    <IconComponent className={`w-4 h-4 ${isActive ? 'text-[#744525]' : 'text-[#9c7253]'}`} />
+                    <IconComponent
+                      className={`w-4 h-4 transition-colors duration-200 ${
+                        isActive ? 'text-[#854d27]' : 'text-slate-500 group-hover:text-[#854d27]'
+                      }`}
+                    />
                     <span>{item.label}</span>
                   </button>
                 );
@@ -593,26 +601,38 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => solicitarExecucaoExperimento('padrao')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors text-left cursor-pointer ${
+                className={`w-full group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all duration-200 text-left cursor-pointer ${
                   viewMode === 'experiments' && experimentMode === 'padrao'
                     ? 'bg-slate-100 text-neutral-900 font-semibold shadow-2xs'
-                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-slate-100/70 font-medium'
+                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-slate-100/80 font-medium'
                 }`}
               >
-                <Activity className={`w-4 h-4 ${viewMode === 'experiments' && experimentMode === 'padrao' ? 'text-[#744525]' : 'text-[#9c7253]'}`} />
+                <Activity
+                  className={`w-4 h-4 transition-colors duration-200 ${
+                    viewMode === 'experiments' && experimentMode === 'padrao'
+                      ? 'text-[#854d27]'
+                      : 'text-slate-500 group-hover:text-[#854d27]'
+                  }`}
+                />
                 <span>Bateria Completa (100, 1k, 10k)</span>
               </button>
 
               <button
                 type="button"
                 onClick={() => solicitarExecucaoExperimento('rapida')}
-                className={`w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-colors text-left cursor-pointer ${
+                className={`w-full group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs transition-all duration-200 text-left cursor-pointer ${
                   viewMode === 'experiments' && experimentMode === 'rapida'
                     ? 'bg-slate-100 text-neutral-900 font-semibold shadow-2xs'
-                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-slate-100/70 font-medium'
+                    : 'text-neutral-600 hover:text-neutral-900 hover:bg-slate-100/80 font-medium'
                 }`}
               >
-                <Zap className={`w-4 h-4 ${viewMode === 'experiments' && experimentMode === 'rapida' ? 'text-[#744525]' : 'text-[#9c7253]'}`} />
+                <Zap
+                  className={`w-4 h-4 transition-colors duration-200 ${
+                    viewMode === 'experiments' && experimentMode === 'rapida'
+                      ? 'text-[#854d27]'
+                      : 'text-slate-500 group-hover:text-[#854d27]'
+                  }`}
+                />
                 <span>Validação Rápida (N = 100)</span>
               </button>
 
@@ -627,19 +647,25 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowCustomNInput(!showCustomNInput)}
-                  className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-colors text-left cursor-pointer ${
+                  className={`w-full group flex items-center justify-between px-3 py-2 rounded-lg text-xs transition-all duration-200 text-left cursor-pointer ${
                     viewMode === 'experiments' && experimentMode === 'custom'
                       ? 'text-neutral-900 font-semibold'
-                      : 'text-neutral-600 hover:text-neutral-900 hover:bg-slate-100/70 font-medium'
+                      : 'text-neutral-600 hover:text-neutral-900 hover:bg-slate-100/80 font-medium'
                   }`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <Sliders className={`w-4 h-4 ${viewMode === 'experiments' && experimentMode === 'custom' ? 'text-[#744525]' : 'text-[#9c7253]'}`} />
+                    <Sliders
+                      className={`w-4 h-4 transition-colors duration-200 ${
+                        viewMode === 'experiments' && experimentMode === 'custom' || showCustomNInput
+                          ? 'text-[#854d27]'
+                          : 'text-slate-500 group-hover:text-[#854d27]'
+                      }`}
+                    />
                     <span>Tamanho Personalizado</span>
                   </div>
                   <ChevronRight
-                    className={`w-3.5 h-3.5 transition-transform duration-200 ${
-                      showCustomNInput ? 'rotate-90 text-[#744525]' : 'text-[#9c7253]'
+                    className={`w-3.5 h-3.5 transition-all duration-200 ${
+                      showCustomNInput ? 'rotate-90 text-[#854d27]' : 'text-slate-400 group-hover:text-[#854d27]'
                     }`}
                   />
                 </button>
@@ -652,12 +678,12 @@ export default function App() {
                       placeholder="N livre (ex: 500)"
                       value={experimentCustomN}
                       onChange={(e) => setExperimentCustomN(e.target.value.replace(/\D/g, ''))}
-                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-[#9c7253]/45 bg-white text-neutral-900 focus:outline-hidden focus:border-[#744525] focus:ring-1 focus:ring-[#744525]/20 font-mono"
+                      className="w-full text-xs px-2.5 py-1.5 rounded-lg border border-slate-200 bg-white text-neutral-900 focus:outline-hidden focus:border-[#854d27] focus:ring-1 focus:ring-[#854d27]/25 font-mono transition-all duration-200"
                     />
                     <button
                       type="button"
                       onClick={() => solicitarExecucaoExperimento('custom', experimentCustomN)}
-                      className="text-xs px-3 py-1.5 rounded-lg bg-[#12372a] hover:bg-[#184535] active:bg-[#0a231b] text-white font-medium transition-colors shrink-0 shadow-2xs cursor-pointer"
+                      className="text-xs px-3 py-1.5 rounded-lg bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] text-white font-semibold transition-colors duration-200 shrink-0 shadow-2xs cursor-pointer"
                     >
                       Rodar
                     </button>
@@ -676,26 +702,28 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setShowNil(!showNil)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-neutral-600 hover:bg-slate-100/70 hover:text-neutral-900 cursor-pointer transition-colors text-left"
+                className="w-full group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-neutral-600 hover:bg-slate-100/80 hover:text-neutral-900 cursor-pointer transition-all duration-200 text-left"
               >
                 <div
                   className={`w-4 h-4 rounded-[4px] border flex items-center justify-center transition-all shrink-0 ${
                     showNil
-                      ? 'bg-[#12372a] border-[#12372a] text-white shadow-2xs'
-                      : 'bg-white border-[#9c7253]/45 hover:border-[#744525]'
+                      ? 'bg-[#14532d] border-[#14532d] text-white shadow-2xs'
+                      : 'bg-white border-slate-300 group-hover:border-[#854d27]'
                   }`}
                 >
                   {showNil && <Check className="w-3 h-3 stroke-[2.5]" />}
                 </div>
-                <span className="font-medium text-neutral-700">Sentinelas NIL na Rubro-Negra</span>
+                <span className="font-medium text-neutral-700 group-hover:text-neutral-900 transition-colors">
+                  Sentinelas NIL na Rubro-Negra
+                </span>
               </button>
 
               <button
                 type="button"
                 onClick={() => setShowConsoleDrawer(!showConsoleDrawer)}
-                className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-neutral-600 hover:bg-slate-100/70 hover:text-neutral-900 transition-colors cursor-pointer text-left font-medium"
+                className="w-full group flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs text-neutral-600 hover:bg-slate-100/80 hover:text-neutral-900 transition-all duration-200 cursor-pointer text-left font-medium"
               >
-                <Terminal className="w-4 h-4 text-[#9c7253]" />
+                <Terminal className="w-4 h-4 text-slate-500 group-hover:text-[#854d27] transition-colors duration-200" />
                 <span>Console de Rotações</span>
               </button>
             </div>
@@ -705,7 +733,7 @@ export default function App() {
         {/* Sidebar Footer (Profile / Info Card) */}
         <div className="border-t border-slate-200 p-3 bg-slate-50/50 flex items-center justify-between text-xs">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-[#12372a]/10 text-[#12372a] border border-[#12372a]/20 flex items-center justify-center font-bold text-xs shadow-2xs">
+            <div className="w-8 h-8 rounded-full bg-[#14532d]/10 text-[#14532d] border border-[#14532d]/20 flex items-center justify-center font-bold text-xs shadow-2xs">
               UF
             </div>
             <div className="leading-tight">
@@ -716,7 +744,7 @@ export default function App() {
           <button
             onClick={() => setShowGuideModal(true)}
             title="Guia Teórico das Estruturas"
-            className="p-1.5 rounded-lg hover:bg-slate-200 text-[#9c7253] hover:text-[#744525] transition-colors cursor-pointer"
+            className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-[#854d27] transition-colors duration-200 cursor-pointer"
           >
             <HelpCircle className="w-4 h-4" />
           </button>
@@ -1358,7 +1386,7 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => setShowGuideModal(false)}
-                  className="px-4 py-2 rounded-lg bg-[#12372a] text-xs font-semibold text-white hover:bg-[#184535] active:bg-[#0a231b] transition-colors cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[#14532d] text-xs font-semibold text-white hover:bg-[#166534] active:bg-[#0f3d21] transition-colors cursor-pointer"
                 >
                   Entendi
                 </button>
@@ -1374,7 +1402,7 @@ export default function App() {
               {/* Modal Header */}
               <div className="px-6 py-5 border-b border-stone-100 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-[#12372a]/10 border border-[#12372a]/20 text-[#12372a] flex items-center justify-center font-bold shadow-xs">
+                  <div className="w-9 h-9 rounded-xl bg-[#14532d]/10 border border-[#14532d]/20 text-[#14532d] flex items-center justify-center font-bold shadow-xs">
                     <Activity className="w-5 h-5" />
                   </div>
                   <div>
@@ -1393,12 +1421,12 @@ export default function App() {
 
               {/* Modal Body */}
               <div className="p-6 space-y-4">
-                <div className="p-4 rounded-xl bg-[#fcfaf7] border border-[#9c7253]/25 space-y-2">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-neutral-900 font-mono">
                       {confirmExperimentModal.label}
                     </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#12372a]/10 text-[#12372a] font-semibold font-mono">
+                    <span className="text-[10px] px-2 py-0.5 rounded-full bg-[#14532d]/10 text-[#14532d] font-semibold font-mono">
                       seed = 42
                     </span>
                   </div>
@@ -1442,7 +1470,7 @@ export default function App() {
                       setConfirmExperimentModal(null);
                       handleDispararExperimento(modo, customVal);
                     }}
-                    className="px-4 py-2 text-xs font-semibold text-white bg-[#12372a] hover:bg-[#184535] active:bg-[#0a231b] rounded-xl transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
+                    className="px-4 py-2 text-xs font-semibold text-white bg-[#14532d] hover:bg-[#166534] active:bg-[#0f3d21] rounded-xl transition-colors flex items-center gap-2 shadow-xs cursor-pointer"
                   >
                     <Play className="w-3.5 h-3.5 fill-current" />
                     <span>Confirmar e Executar</span>
